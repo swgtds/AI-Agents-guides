@@ -1,0 +1,302 @@
+# Build Your Patient FAQ Agent with Mastra
+
+> Create a Mastra Patient FAQ Agent that answers general healthcare questions from your curated medical knowledge, then connect it to CometChat.
+
+Imagine an agent that answers common patient questions with concise, cited guidance—grounded in your medical content and available right inside chat.
+
+***
+
+## What You’ll Build
+
+* A **Mastra agent** specialized for healthcare FAQs (`patient-faq`).
+* Retrieves answers from your `knowledge/<namespace>` folder and cites sources.
+* Short, patient-friendly responses with medical disclaimers.
+* Optional integration into **CometChat** chats.
+
+***
+
+## Prerequisites
+
+* Node.js installed
+* Mastra framework
+* OpenAI API key in `.env` as `OPENAI_API_KEY`
+* A CometChat app (optional for chat integration)
+
+***
+
+## Quick links
+
+* Repo: [patient-faq-agent](https://github.com/swagata-cometchat/healthcare-AI-Agent/tree/main/patient-faq-agent)
+* Quickstart: [Patient FAQ Agent Quickstart](https://github.com/swagata-cometchat/healthcare-AI-Agent/tree/main/patient-faq-agent#readme)
+* Swagger UI (local): [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+* Knowledge folder: [knowledge](https://github.com/swagata-cometchat/healthcare-AI-Agent/tree/main/patient-faq-agent/knowledge/medical)
+* Local API base: [http://localhost:4111/api](http://localhost:4111/api)
+
+***
+
+## How it works
+
+This project implements a retrieval-augmented Patient FAQ Agent that:
+
+* Ingests sources (URLs, files, or raw text) into a local knowledge folder per <code>namespace</code> using the <b>ingestSources</b> tool. Normalized content is stored under <code>knowledge/\<namespace></code>.
+* Retrieves relevant snippets with the <b>docsRetriever</b> tool. It scans your <code>knowledge/\<namespace></code> content, ranks results, and returns excerpts with file names as sources.
+* Generates answers using only retrieved context. The agent includes medical disclaimers and appends a concise “Sources” list.
+* Handles errors defensively. Server utilities sanitize errors before returning responses.
+
+Key components: the agent, docs retriever tool, ingest endpoints, and server routes.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>.
+    ```bash
+    npm install
+    ```    
+  </Step>
+
+  <Step title="Define the agent">
+    The <b>patient-faq</b> agent answers from retrieved docs only, includes medical disclaimers, and cites sources. See [src/mastra/agents/patient-faq-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/agents/patient-faq-agent.ts).
+  </Step>
+
+  <Step title="Register in server">
+    The server registers the agent and exposes <code>/api/tools/ingestSources</code> and <code>/api/tools/searchDocs</code>. The agent chat endpoint is <code>/api/agents/patient-faq/generate</code>. See [server entry](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/index.ts).
+  </Step>
+
+  <Step title="Ingest knowledge">
+    Choose a <code>namespace</code> (default: <code>medical</code>) and POST sources to <code>/api/tools/ingestSources</code>. Use URLs, file paths, or raw text.
+  </Step>
+
+  <Step title="Ask the agent">
+    Send chat turns to <code>/api/agents/patient-faq/generate</code> with a <code>messages</code> array. Optionally pass <code>toolParams.namespace</code> to scope retrieval.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>patient-faq</code>, and point Deployment URL to your public generate endpoint.
+  </Step>
+
+  <Step title="Deploy & observe">
+    Make the API public, verify via Swagger UI, and re-run ingestion when docs change.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files and folders for the Patient FAQ Agent:
+
+* Environment & runtime
+  * [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/package.json)
+  * [tsconfig.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/tsconfig.json)
+  * [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/README.md)
+* Agent
+  * [src/mastra/agents/patient-faq-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/agents/patient-faq-agent.ts)
+  * [src/mastra/agents/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/agents/index.ts) (if present)
+* Tools
+  * [src/mastra/tools/docs-retriever.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/tools/docs-retriever.ts)
+  * [src/mastra/tools/ingest-sources.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/tools/ingest-sources.ts)
+  * [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/tools/index.ts)
+* Server
+  * [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/index.ts)
+  * [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/server/routes.ts)
+  * [src/mastra/server/routes/ingest.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/server/routes/ingest.ts)
+  * [src/mastra/server/routes/searchDocs.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/server/routes/searchDocs.ts)
+  * [src/mastra/server/util/safeErrorMessage.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/server/util/safeErrorMessage.ts)
+* Knowledge base (sample)
+  * [knowledge/medical/general-patient-faq.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/knowledge/medical/general-patient-faq.md)
+  * [knowledge/medical/common-symptoms-guide.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/knowledge/medical/common-symptoms-guide.md)
+  * [knowledge/medical/emergency-care-guide.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/knowledge/medical/emergency-care-guide.md)
+
+***
+
+## Step 1 - Create the Agent
+
+**`src/mastra/agents/patient-faq-agent.ts`**
+
+* Agent file: [src/mastra/agents/patient-faq-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/agents/patient-faq-agent.ts)
+* Docs retriever tool: [src/mastra/tools/docs-retriever.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/src/mastra/tools/docs-retriever.ts)
+* Knowledge folder: [knowledge/medical](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-faq-agent/knowledge/medical)
+
+Checklist for the agent:
+
+* Set `name` to **"patient-faq"** so the API path is `/api/agents/patient-faq/*`.
+* Answer **from retrieved docs** only and include medical disclaimers.
+* End every response with a short **“Sources:”** list.
+* Register `docsRetriever`.
+
+***
+
+## Step 2 - Register the Agent in Mastra
+
+**`src/mastra/index.ts`**
+
+* Ensure the agent is registered with key **"patient-faq"** → API path `/api/agents/patient-faq/*`.
+* Swagger UI is enabled via `server.build.swaggerUI=true`.
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: `http://localhost:4111/api`
+
+<Steps>
+  <Step title="Install dependencies">
+    <code>npm install</code>
+  </Step>
+
+  <Step title="Start the dev server">
+    <code>npx mastra dev</code>
+  </Step>
+
+  <Step title="Ingest sources">
+    POST to <code>/api/tools/ingestSources</code> with a <code>namespace</code> (default: <code>medical</code>).
+  </Step>
+
+  <Step title="Ask the agent">
+    POST to <code>/api/agents/patient-faq/generate</code>.
+  </Step>
+</Steps>
+
+API endpoints exposed by this project (see [Swagger UI](http://localhost:4111/swagger-ui)):
+
+* POST `/api/tools/ingestSources` — ingest URLs/files/text into `knowledge/<namespace>`
+* POST `/api/tools/searchDocs` — retrieve relevant snippets from `knowledge/<namespace>`
+* POST `/api/agents/patient-faq/generate` — chat with the agent
+
+***
+
+## Step 4 - Deploy the API
+
+* [Swagger UI (local)](http://localhost:4111/swagger-ui)
+* Ensure the public route: **`/api/agents/patient-faq/generate`** is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>patient-faq</code>, <b>Deployment URL</b>=your public generate endpoint.</Step>
+  <Step title="(Optional) Enhancements">Add greeting, prompts, and configure actions/tools if you use frontend tools.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: [Overview](/ai-agents/overview) · [Instructions](/ai-agents/instructions) · [Custom agents](/ai-agents/custom-agents)
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Mastra Patient FAQ agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses & any tool triggers.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" data-path="images/ai-agent-chat-builder-preview.png" srcset="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=280&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=1f4ae67d4cad96c2eefb98308eaff7a1 280w, https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=560&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=23f73634d963fbc5d92e4c55a6fe40a6 560w, https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=840&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=4c57470a57304a01ec2713391b9d38a1 840w, https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=1100&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=c619ce742b329afece70e35e21da4dfb 1100w, https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=1650&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=e08d84903a76ac30a26112e83df36218 1650w, https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?w=2500&fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=f599dd12c51da94e59860c20daae65e6 2500w" data-optimize="true" data-opv="2" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+Once your Patient FAQ Agent is configured, you can integrate it into your app using the CometChat No Code - Widget:
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> **Note:** The **Mastra Patient FAQ agent** you connected earlier is already part of the exported configuration, so your end-users can chat with that agent immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="API generates response">POST to <code>/api/agents/patient-faq/generate</code> returns a doc-grounded answer with disclaimers.</Step>
+  <Step title="Agent listed"><code>/api/agents</code> includes <code>"patient-faq"</code>.</Step>
+  <Step title="Tool action works">UI handles <code>docsRetriever</code> tool invocation.</Step>
+  <Step title="Full sample test (run curl)">See curl commands below.</Step>
+</Steps>
+
+```bash
+curl -X POST http://localhost:4111/api/agents/patient-faq/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      { "role": "user", "content": "@agent What should I do if I have a high fever?" }
+    ],
+    "toolParams": { "namespace": "medical" }
+  }'
+```
+
+Ingest examples:
+
+```bash
+# Files
+curl -X POST http://localhost:4111/api/tools/ingestSources \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "files": [
+      "knowledge/medical/general-patient-faq.md",
+      "knowledge/medical/common-symptoms-guide.md",
+      "knowledge/medical/emergency-care-guide.md"
+    ],
+    "namespace": "medical"
+  }'
+
+# URLs
+curl -X POST http://localhost:4111/api/tools/ingestSources \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sources": ["https://example.com/medical-guidelines"],
+    "namespace": "medical"
+  }'
+
+# Inline text
+curl -X POST http://localhost:4111/api/tools/ingestSources \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sources": ["Q: What is a normal blood pressure? A: Typically < 120/80 mmHg."],
+    "namespace": "medical"
+  }'
+```
+
+***
+
+## Security & production checklist
+
+* Protect endpoints with auth (API key/JWT) and restrict CORS to trusted origins.
+* Add rate limiting and request size limits to ingestion and generate routes.
+* Validate inputs: enforce allowed namespaces, URL/file whitelists, and payload schemas.
+* Monitor logs and errors; sanitize responses using server utilities.
+* Keep your OpenAI key server-side only; never expose it to the client.
+
+## Troubleshooting
+
+* **Agent talks too much**: tighten instructions to answer concisely from docs and include disclaimers.
+* **No results**: ensure `/knowledge` contains `.md/.mdx/.txt` files or your ingestion job populated the store.
+* **Not visible in chat**: verify the agent is added and enabled in CometChat.
+* **404 / Agent not found**: check that the server registers the agent with key `patient-faq`.
+* **PDF ingestion issues**: install `pdf-parse` if needed; use `allowInsecureTLS` only in trusted environments.
+
+***
+
+## Next Steps
+
+* Add tools like `summarize-doc`, `triage-symptom`, or `link-to-source`.
+* Use embeddings + chunking for better retrieval.
+* Restrict answers to whitelisted folders or domains.
+* Inspect and try endpoints via Swagger UI (`/swagger-ui`).
+* Set up CI/CD in your own repo as needed.
+
+
+
