@@ -10,7 +10,8 @@
       {
         "group": "Guides",
         "pages": [
-          "guides/patient-faq-agent"
+          "guides/patient-faq-agent",
+          "guides/patient-onboarding-workflow"
         ]
       }
     ]

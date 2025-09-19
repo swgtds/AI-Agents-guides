@@ -1,0 +1,267 @@
+# Build Your Patient Onboarding Workflow Agent with Mastra
+
+> Create a Mastra agent that orchestrates patient onboarding: collects info, verifies identity and insurance, checks compliance, and guides users step‑by‑step — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agents** that handle patient onboarding flows and workflow decisions.
+- Triggered only when explicitly mentioned (e.g., `@agent`).
+- Endpoints for onboarding steps: initiate, update info, process KYC docs, verify identity/insurance, check compliance, and get status.
+- Integrated into **CometChat** chats.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 18+ installed.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- A CometChat app.
+
+***
+
+## Quick links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/README.md)
+- **Swagger UI (local)**: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- **Environment variables**: see README → Environment Variables
+
+***
+
+## How it works
+
+This example implements a workflow-oriented Onboarding Agent that:
+
+- Orchestrates onboarding via REST routes (initiate → info → documents → verification → compliance → status).
+- Uses tools in [src/mastra/tools/verification-tools.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/tools/verification-tools.ts) for OCR, identity checks, and insurance eligibility.
+- Exposes chat agents for guidance and decisions:
+  - `patient-onboarding` agent for conversational guidance and step prompts.
+  - `workflow-manager` agent for workflow decisions and next-step recommendations.
+- Handles errors defensively. Server utilities sanitize errors before returning responses.
+
+Key components:
+- Agents: [src/mastra/agents/onboarding-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/agents/onboarding-agent.ts)
+- Tools: [src/mastra/tools/verification-tools.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/tools/verification-tools.ts)
+- Routes: [src/mastra/server/routes/onboarding.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes/onboarding.ts)
+- Server: [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes.ts), [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/index.ts)
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>.
+  </Step>
+
+  <Step title="Define the agents">
+    Ensure the <b>patient-onboarding</b> agent handles onboarding guidance and only responds when explicitly mentioned (e.g., <code>@agent</code>). Optionally include a <b>workflow-manager</b> agent for decision support.
+  </Step>
+
+  <Step title="Register in server">
+    Register agents and expose onboarding routes. Confirm API paths like <code>/api/onboarding/*</code> and <code>/api/agents/patient-onboarding/generate</code> are available (see [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/index.ts) and [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes.ts)).
+  </Step>
+
+  <Step title="Run locally">
+    Start the dev server using scripts in [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/package.json). Visit Swagger UI at [swagger-ui](http://localhost:4111/swagger-ui) to explore endpoints.
+  </Step>
+
+  <Step title="Walk the workflow">
+    Use the onboarding endpoints to initiate a session, update patient and insurance info, process documents, verify identity/insurance, and check compliance.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>patient-onboarding</code>, and point Deployment URL to your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files and folders for the Onboarding Workflow Agent:
+
+- Runtime & config
+  - [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/package.json)
+  - [tsconfig.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/tsconfig.json)
+  - [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/README.md)
+- Agents
+  - [src/mastra/agents/onboarding-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/agents/onboarding-agent.ts)
+- Tools
+  - [src/mastra/tools/verification-tools.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/tools/verification-tools.ts)
+  - [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/tools/index.ts)
+- Server
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/index.ts)
+  - [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes.ts)
+  - [src/mastra/server/routes/onboarding.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes/onboarding.ts)
+  - [src/mastra/server/util/safeErrorMessage.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/util/safeErrorMessage.ts)
+- Types
+  - [src/types/patient.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/types/patient.ts)
+
+***
+
+## Step 1 - Create the Agent
+
+Ensure `src/mastra/agents/onboarding-agent.ts` registers an agent with:
+
+- `name` set to <b>"patient-onboarding"</b> so the API path is `/api/agents/patient-onboarding/*`.
+- Behavior: respond only when mentioned (e.g., `@agent`), guide users step-by-step, and call verification tools when needed.
+- Tools: connect OCR, identity, and insurance verification capabilities from `verification-tools.ts`.
+
+***
+
+## Step 2 - Register the Agent in Mastra
+
+In [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/index.ts) and [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/src/mastra/server/routes.ts):
+
+- Register the agent with key <b>"patient-onboarding"</b> → API path `/api/agents/patient-onboarding/*`.
+- Wire onboarding routes under `/api/onboarding/*`.
+- Configure storage/logger as per [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/README.md).
+- Ensure all necessary dependencies are installed and the server is running before testing the API.
+- Test the API endpoints using tools like Postman or curl to ensure they respond correctly.
+    
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: [http://localhost:4111/api](http://localhost:4111/api)
+
+<Steps>
+  <Step title="Install dependencies">
+    Use the commands from the project README.
+  </Step>
+
+  <Step title="Start the dev server">
+    Run the local Mastra server (see <code>npm run dev</code> in [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/README.md)).
+  </Step>
+
+  <Step title="Initiate onboarding">
+    POST to <code>/api/onboarding/initiate</code> to create a new session.
+  </Step>
+
+  <Step title="Ask the onboarding agent">
+    POST to <code>/api/agents/patient-onboarding/generate</code> with a <code>messages</code> array. Mention the agent (e.g., <code>@agent</code>).
+  </Step>
+</Steps>
+
+API endpoints exposed by this example (see Swagger UI):
+
+- POST `/api/onboarding/initiate` — start new patient onboarding
+- PUT `/api/onboarding/:patientId/patient-info` — update patient information
+- PUT `/api/onboarding/:patientId/insurance-info` — update insurance information
+- POST `/api/onboarding/:patientId/process-document` — process KYC documents
+- POST `/api/onboarding/:patientId/verify-identity` — verify identity
+- POST `/api/onboarding/:patientId/verify-insurance` — verify insurance
+- POST `/api/onboarding/:patientId/check-compliance` — compliance checks
+- GET `/api/onboarding/:patientId/status` — onboarding status
+- POST `/api/agents/patient-onboarding/generate` — chat with onboarding agent
+- POST `/api/agents/workflow-manager/generate` — workflow decision support
+
+***
+
+## Step 4 - Deploy the API
+
+- Swagger UI: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- Environment variables: see [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/patient-onboarding-workflow-agent/README.md) → Environment Variables
+
+Ensure the public route: **`/api/agents/patient-onboarding/generate`** is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>patient-onboarding</code>, <b>Deployment URL</b>=your public generate endpoint.</Step>
+  <Step title="(Optional) Add workflow agent">Add <b>workflow-manager</b> similarly if you expose it publicly.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: Overview · Instructions · Custom agents
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Mastra Onboarding agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses & any tool triggers.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+Once your agent is configured, integrate it into your app:
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> Note: The <b>patient-onboarding</b> agent you connected is part of the exported configuration; end‑users can chat with it immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="API generates response">POST to <code>/api/agents/patient-onboarding/generate</code> returns a guided onboarding response.</Step>
+  <Step title="Agent listed"><code>/api/agents</code> includes <code>"patient-onboarding"</code>.</Step>
+  <Step title="Workflow works">Onboarding endpoints progress status correctly.</Step>
+  <Step title="Full sample test (run curl)">See curl commands below.</Step>
+</Steps>
+
+```bash
+# Chat with the onboarding agent
+curl -X POST http://localhost:4111/api/agents/patient-onboarding/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      { "role": "user", "content": "@agent help me start patient onboarding" }
+    ]
+  }'
+```
+
+```bash
+# Initiate a new onboarding session
+curl -X POST http://localhost:4111/api/onboarding/initiate \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+***
+
+## Security & production checklist
+
+- Protect endpoints with auth (API key/JWT) and restrict CORS to trusted origins.
+- Add basic rate limiting and request size limits to document and generate routes.
+- Validate inputs with schemas; mask or avoid storing PHI where not needed.
+- Monitor logs and errors; sanitize responses using server utilities.
+- Keep your OpenAI key server-side only; never expose it to the client.
+
+## Troubleshooting
+
+- **Agent doesn’t respond**: ensure you mention it (e.g., <code>@agent</code>) and that it’s registered as <code>patient-onboarding</code>.
+- **Verification fails**: check document quality, supported types, and correct patient/insurance payloads.
+- **Status not updating**: verify the correct <code>patientId</code> is used across steps and the server is persisting session state.
+- **404 / Agent not found**: confirm registration and API path <code>/api/agents/patient-onboarding/generate</code>.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""                    # Required: OpenAI API key
+PORT=4111                            # Server port
+```
