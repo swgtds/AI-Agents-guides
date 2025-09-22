@@ -11,7 +11,9 @@
         "group": "Guides",
         "pages": [
           "guides/patient-faq-agent",
-          "guides/patient-onboarding-workflow"
+          "guides/patient-onboarding-workflow",
+          "guides/human-handoff-agent",
+          "guides/coordinator-agent-healthcare"
         ]
       }
     ]
