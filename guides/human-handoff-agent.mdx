@@ -1,0 +1,251 @@
+# Build Your Medical Symptom Checker with Human Handoff (Mastra)
+
+> Create a Mastra agent that analyzes symptoms, routes to the right medical professional (nurse, doctor, emergency), and escalates to a human representative when needed — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agents** for symptom assessment and specialist routing (nurse, doctor, emergency, human rep).
+- Triggered only when explicitly mentioned (e.g., `@agent`).
+- A single chat endpoint that returns assessment, urgency, and routing summary.
+- Integrated into **CometChat** chats with optional human handoff.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 20.9+ installed.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- A CometChat app (optional for integration).
+
+***
+
+## Quick links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/README.md)
+- **Swagger UI (local)**: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- **Environment variables**: see README → Environment Variables
+
+***
+
+## How it works
+
+This example implements a routing-oriented Symptom Checker Agent that:
+
+- Parses free-text symptoms, detects critical keywords, and assigns an urgency level.
+- Routes to the appropriate specialist agent: nurse practitioner, doctor, emergency, or human representative.
+- Returns a concise response with a summary line like `(routedTo | urgency: level | escalated: yes/no)`.
+- Handles errors defensively. Server utilities sanitize errors before returning responses.
+
+Key components:
+- Agents: [symptom-checker-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/symptom-checker-agent.ts), [nurse-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/nurse-practitioner-agent.ts), [doctor-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/doctor-agent.ts), [emergency-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/emergency-agent.ts), [human-rep-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/human-rep-agent.ts)
+- Tools: [symptom-checker-tool.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/tools/symptom-checker-tool.ts)
+- Workflow: [symptom-checker-workflow.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/workflows/symptom-checker-workflow.ts)
+- Server: [index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/index.ts)
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>.
+  </Step>
+
+  <Step title="Define the agents">
+    Ensure the <b>symptomCheckerAgent</b> analyzes symptoms, responds when mentioned (e.g., <code>@agent</code>), and routes to specialists. Keep medical disclaimers in the system prompt.
+  </Step>
+
+  <Step title="Register in server">
+    Register agents and expose the chat route <code>/api/agents/symptomCheckerAgent/generate</code> (see [index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/index.ts)).
+  </Step>
+
+  <Step title="Run locally">
+    Start the dev server using scripts in [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/package.json). Visit Swagger UI at <code>/swagger-ui</code>.
+  </Step>
+
+  <Step title="Validate routing">
+    Use curl (below) to test low/high/critical symptoms and human handoff cases.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>symptomCheckerAgent</code>, and point Deployment URL to your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files and folders for the Symptom Checker with Human Handoff:
+
+- Runtime & config
+  - [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/package.json)
+  - [tsconfig.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/tsconfig.json)
+  - [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/README.md)
+- Agents
+  - [symptom-checker-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/symptom-checker-agent.ts)
+  - [src/mastra/agents/nurse-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/nurse-practitioner-agent.ts)
+  - [src/mastra/agents/doctor-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/doctor-agent.ts)
+  - [src/mastra/agents/emergency-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/emergency-agent.ts)
+  - [src/mastra/agents/human-rep-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/human-rep-agent.ts)
+- Tools
+  - [src/mastra/tools/symptom-checker-tool.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/tools/symptom-checker-tool.ts)
+- Workflows
+  - [src/mastra/workflows/symptom-checker-workflow.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/workflows/symptom-checker-workflow.ts)
+- Server
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/index.ts)
+
+***
+
+## Step 1 - Create the Agent
+
+Ensure [src/mastra/agents/symptom-checker-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/symptom-checker-agent.ts) registers an agent with:
+
+- `name` set to <b>"symptomCheckerAgent"</b> so the API path is `/api/agents/symptomCheckerAgent/*`.
+- Behavior: respond only when mentioned (e.g., `@agent`), assess symptoms, compute urgency, and route to specialists.
+- Tools: use `symptom-checker-tool.ts` for analysis and keyword detection; handoff or escalate based on result.
+
+***
+
+## Step 2 - Register in Mastra
+
+In [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/index.ts):
+
+- Register the agent with key <b>"symptomCheckerAgent"</b> → API path `/api/agents/symptomCheckerAgent/*`.
+- Configure storage/logger as per [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/README.md).
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: [http://localhost:4111/api](http://localhost:4111/api)
+
+<Steps>
+  <Step title="Install dependencies">
+    Use the commands from the project README.
+  </Step>
+
+  <Step title="Start the dev server">
+    Run the local Mastra server (e.g., <code>npx mastra dev</code> or <code>npm run dev</code> if configured).
+  </Step>
+
+  <Step title="Ask the symptom checker">
+    POST to <code>/api/agents/symptomCheckerAgent/generate</code> with a <code>messages</code> array. Mention the agent (e.g., <code>@agent</code>).
+  </Step>
+</Steps>
+
+API endpoint exposed by this example (see Swagger UI):
+
+- POST `/api/agents/symptomCheckerAgent/generate` — assess symptoms and receive routing
+
+***
+
+## Step 4 - Deploy the API
+
+- Swagger UI: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- Environment variables: see [README](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/README.md) → Environment Variables
+
+Ensure the public route: **`/api/agents/symptomCheckerAgent/generate`** is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>symptomCheckerAgent</code>, <b>Deployment URL</b>=your public generate endpoint.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: Overview · Instructions · Custom agents
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Symptom Checker agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses & escalation behavior.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+Once your agent is configured, integrate it into your app:
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> Note: The <b>symptomCheckerAgent</b> you connected is part of the exported configuration; end‑users can chat with it immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="Basic check">Run a low-urgency assessment.</Step>
+  <Step title="Emergency check">Validate critical escalation.</Step>
+  <Step title="Doctor-level check">Test high-priority routing.</Step>
+  <Step title="Full sample tests">Use the curl commands below.</Step>
+</Steps>
+
+```bash
+# Basic symptom check
+curl -s -X POST http://localhost:4111/api/agents/symptomCheckerAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I have a mild headache and feel tired"}]}'
+```
+
+```bash
+# Emergency symptom check
+curl -s -X POST http://localhost:4111/api/agents/symptomCheckerAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I am experiencing severe chest pain and difficulty breathing"}]}'
+```
+
+```bash
+# Doctor-level symptom check
+curl -s -X POST http://localhost:4111/api/agents/symptomCheckerAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I have a fever over 102 and severe abdominal pain"}]}'
+```
+
+***
+
+## Security & production checklist
+
+- Add medical disclaimers; remind users to seek emergency care when critical.
+- Protect endpoints with auth (API key/JWT) and restrict CORS to trusted origins.
+- Rate limit; validate inputs; avoid storing PHI unless necessary; encrypt at rest/in transit.
+- Monitor logs and errors; sanitize responses using server utilities.
+- Keep your OpenAI key server-side only; never expose it to the client.
+
+## Troubleshooting
+
+- **Wrong routing**: adjust keyword and severity logic in [symptom-checker-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/human-handoff-agent/src/mastra/agents/symptom-checker-agent.ts).
+- **Agent not found**: confirm registration and path <code>/api/agents/symptomCheckerAgent/generate</code> in `index.ts`.
+- **No response**: check server logs and ensure dependencies are installed.
+- **OpenAI errors**: verify a valid `OPENAI_API_KEY` and usage limits.
+
+***
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=""   # Required: OpenAI API key
+PORT=4111            # Server port
+```

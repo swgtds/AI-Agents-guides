@@ -1,0 +1,251 @@
+# Build Your Healthcare Appointment Coordinator Agent with Mastra
+
+> Create a Mastra agent that routes patients to the right provider (GP, specialist, nurse practitioner, emergency) and schedules appointments — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agents** that coordinate appointments and provider routing.
+- Triggered only when explicitly mentioned (e.g., `@agent`).
+- A chat endpoint that returns routing and scheduling results with urgency level.
+- Integrated into **CometChat** chats.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 20.9+ installed.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- A CometChat app (optional for integration).
+
+***
+
+## Quick links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/README.md)
+- **Swagger UI (local)**: [http://localhost:4113/swagger-ui](http://localhost:4113/swagger-ui)
+- **Environment variables**: see [README](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/README.md) → Environment Variables
+
+***
+
+## How it works
+
+This example implements an Appointment Coordinator Agent that:
+
+- Analyzes patient requests and determines the appropriate provider (GP, specialist, NP, emergency).
+- Schedules appointments with realistic times and returns confirmations.
+- Returns a concise response and summary like `(routedTo | scheduled: yes/no | urgency: level)`.
+- Handles errors defensively. Server utilities sanitize errors before returning responses.
+
+Key components:
+- Agents: [appointment-coordinator-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/appointment-coordinator-agent.ts), [general-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/general-practitioner-agent.ts), [specialist-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/specialist-agent.ts), [nurse-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/nurse-practitioner-agent.ts), [emergency-scheduler-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/emergency-scheduler-agent.ts)
+- Tools: [src/mastra/tools/appointment-coordinator-tool.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/tools/appointment-coordinator-tool.ts)
+- Workflow: [src/mastra/workflows/appointment-scheduling-workflow.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/workflows/appointment-scheduling-workflow.ts)
+- Server: [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/index.ts)
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>.
+  </Step>
+
+  <Step title="Define the agent">
+    Ensure the <b>appointmentCoordinatorAgent</b> handles routing and scheduling, and only responds when explicitly mentioned (e.g., <code>@agent</code>). Keep medical disclaimers in the system prompt.
+  </Step>
+
+  <Step title="Register in server">
+    Register the agent and expose the chat route <code>/api/agents/appointmentCoordinatorAgent/generate</code> (see <code>src/mastra/index.ts</code>).
+  </Step>
+
+  <Step title="Run locally">
+    Start the dev server using scripts in [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/package.json). Visit Swagger UI at <code>/swagger-ui</code>.
+  </Step>
+
+  <Step title="Validate scheduling">
+    Use curl (below) to test GP, Specialist, NP, and Emergency cases.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>appointmentCoordinatorAgent</code>, and point Deployment URL to your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files and folders for the Coordinator Agent:
+
+- Runtime & config
+  - [package.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/package.json)
+  - [tsconfig.json](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/tsconfig.json)
+  - [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/README.md)
+- Agents
+  - [src/mastra/agents/appointment-coordinator-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/appointment-coordinator-agent.ts)
+  - [src/mastra/agents/general-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/general-practitioner-agent.ts)
+  - [src/mastra/agents/specialist-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/specialist-agent.ts)
+  - [src/mastra/agents/nurse-practitioner-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/nurse-practitioner-agent.ts)
+  - [src/mastra/agents/emergency-scheduler-agent.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/agents/emergency-scheduler-agent.ts)
+- Tools
+  - [src/mastra/tools/appointment-coordinator-tool.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/tools/appointment-coordinator-tool.ts)
+- Workflows
+  - [src/mastra/workflows/appointment-scheduling-workflow.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/workflows/appointment-scheduling-workflow.ts)
+- Server
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/index.ts)
+
+***
+
+## Step 1 - Create the Agent
+
+Ensure `src/mastra/agents/appointment-coordinator-agent.ts` registers an agent with:
+
+- `name` set to <b>"appointmentCoordinatorAgent"</b> so the API path is `/api/agents/appointmentCoordinatorAgent/*`.
+- Behavior: respond only when mentioned (e.g., `@agent`), analyze requests, compute urgency, route to providers, and schedule.
+- Tools: use [appointment-coordinator-tool.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/tools/appointment-coordinator-tool.ts) and call provider agents as needed.
+
+***
+
+## Step 2 - Register in Mastra
+
+In [src/mastra/index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/index.ts):
+
+- Register the agent with key <b>"appointmentCoordinatorAgent"</b> → API path `/api/agents/appointmentCoordinatorAgent/*`.
+- Configure storage/logger as per [README.md](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/README.md).
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: [http://localhost:4113/api](http://localhost:4113/api)
+
+<Steps>
+  <Step title="Install dependencies">
+    Use the commands from the project README.
+  </Step>
+
+  <Step title="Start the dev server">
+    Run the local Mastra server (e.g., <code>npx mastra dev</code> or <code>npm run dev</code> if configured).
+  </Step>
+
+  <Step title="Ask the coordinator">
+    POST to <code>/api/agents/appointmentCoordinatorAgent/generate</code> with a <code>messages</code> array. Mention the agent (e.g., <code>@agent</code>).
+  </Step>
+</Steps>
+
+API endpoint exposed by this example (see Swagger UI):
+
+- POST `/api/agents/appointmentCoordinatorAgent/generate` — schedule appointments and receive routing
+
+***
+
+## Step 4 - Deploy the API
+
+- Swagger UI: [http://localhost:4113/swagger-ui](http://localhost:4113/swagger-ui)
+- Environment variables: see [README](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/README.md) → Environment Variables
+
+Ensure the public route: **`/api/agents/appointmentCoordinatorAgent/generate`** is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>appointmentCoordinatorAgent</code>, <b>Deployment URL</b>=your public generate endpoint.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: Overview · Instructions · Custom agents
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Coordinator agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses & scheduling behavior.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+Once your agent is configured, integrate it into your app:
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> Note: The <b>appointmentCoordinatorAgent</b> you connected is part of the exported configuration; end‑users can chat with it immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="Routine checkup">Book a GP appointment.</Step>
+  <Step title="Specialist referral">Schedule a specialist visit.</Step>
+  <Step title="Nurse practitioner">Book preventive care.</Step>
+  <Step title="Emergency case">Validate urgent routing.</Step>
+</Steps>
+
+```bash
+# Routine checkup
+curl -s -X POST http://localhost:4113/api/agents/appointmentCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I need a routine checkup appointment for next week"}]}'
+```
+
+```bash
+# Specialist appointment
+curl -s -X POST http://localhost:4113/api/agents/appointmentCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I need to see a cardiologist for my heart condition next Friday afternoon"}]}'
+```
+
+```bash
+# Nurse practitioner appointment
+curl -s -X POST http://localhost:4113/api/agents/appointmentCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"@agent I need a flu shot vaccination"}]}'
+```
+
+***
+
+## Security & production checklist
+
+- Add medical disclaimers; clarify that emergencies require immediate professional care.
+- Protect endpoints with auth (API key/JWT) and restrict CORS to trusted origins.
+- Rate limit; validate inputs; avoid storing PHI unless necessary; encrypt at rest/in transit.
+- Monitor logs and errors; sanitize responses using server utilities.
+- Keep your OpenAI key server-side only; never expose it to the client.
+
+## Troubleshooting
+
+- **Wrong routing**: adjust keyword/severity logic in `appointment-coordinator-agent.ts`.
+- **Agent not found**: confirm registration and path <code>/api/agents/appointmentCoordinatorAgent/generate</code> in [index.ts](https://github.com/swagata-cometchat/healthcare-AI-Agent/blob/main/coordinator-agent-healthcare/src/mastra/index.ts).
+- **No response**: check server logs and ensure dependencies are installed.
+- **OpenAI errors**: verify a valid `OPENAI_API_KEY` and usage limits.
+
+***
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=""   # Required: OpenAI API key
+PORT=4111            # Server port
+```
