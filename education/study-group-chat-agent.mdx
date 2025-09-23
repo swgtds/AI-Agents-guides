@@ -25,17 +25,17 @@
 
 ## Quick links
 
-- **Project README**: `study-group-chat-agent/README.md`
-- **Primary Agent**: `src/mastra/index.ts` (agent registration)
-- **Coordinator Logic**: `src/mastra/agents/study-buddy-coordinator-agent.ts`
-- **Specialists**: `src/mastra/agents/`
-  - `study-group-formation-agent.ts`
-  - `homework-help-agent.ts`
-  - `exam-prep-agent.ts`
-  - `schedule-coordinator-agent.ts`
-  - `motivation-agent.ts`
-- **Tool**: `src/mastra/tools/study-buddy-coordinator-tool.ts`
-- **Workflow**: `src/mastra/workflows/study-buddy-workflow.ts`
+- **Project README**: [study-group-chat-agent/README.md](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/README.md)
+- **Primary Agent**: [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/index.ts) (agent registration)
+- **Coordinator Logic**: [src/mastra/agents/study-buddy-coordinator-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/study-buddy-coordinator-agent.ts)
+- **Specialists**: [src/mastra/agents/](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/)
+  - [study-group-formation-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/study-group-formation-agent.ts)
+  - [homework-help-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/homework-help-agent.ts)
+  - [exam-prep-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/exam-prep-agent.ts)
+  - [schedule-coordinator-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/schedule-coordinator-agent.ts)
+  - [motivation-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/motivation-agent.ts)
+- **Tool**: [src/mastra/tools/study-buddy-coordinator-tool.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/tools/study-buddy-coordinator-tool.ts)
+- **Workflow**: [src/mastra/workflows/study-buddy-workflow.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/workflows/study-buddy-workflow.ts)
 
 ***
 
@@ -50,10 +50,10 @@ This example implements a routed Study Buddy Agent that:
 - Wraps execution in a workflow (`study-buddy-workflow`) so future multi-step extensions (persistence, notifications) are easy.
 
 Key components:
-- Agent container: `src/mastra/index.ts`
-- Coordinator: `study-buddy-coordinator-agent.ts`
-- Tool bridge: `study-buddy-coordinator-tool.ts`
-- Workflow: `study-buddy-workflow.ts`
+- Agent container: [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/index.ts)
+- Coordinator: [study-buddy-coordinator-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/study-buddy-coordinator-agent.ts)
+- Tool bridge: [study-buddy-coordinator-tool.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/tools/study-buddy-coordinator-tool.ts)
+- Workflow: [study-buddy-workflow.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/workflows/study-buddy-workflow.ts)
 - Specialists: group formation, homework, exam prep, schedule, motivation
 
 ***
@@ -100,21 +100,21 @@ Key components:
 Core files for the Study Buddy Agent:
 
 - Runtime & config
-  - `package.json`
-  - `tsconfig.json`
-  - `README.md`
+  - [package.json](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/package.json)
+  - [tsconfig.json](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/tsconfig.json)
+  - [README.md](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/README.md)
 - Agent & registration
-  - `src/mastra/index.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/index.ts)
 - Coordinator & specialists
-  - `agents/study-buddy-coordinator-agent.ts`
-  - `agents/study-group-formation-agent.ts`
-  - `agents/homework-help-agent.ts`
-  - `agents/exam-prep-agent.ts`
-  - `agents/schedule-coordinator-agent.ts`
-  - `agents/motivation-agent.ts`
+  - [agents/study-buddy-coordinator-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/study-buddy-coordinator-agent.ts)
+  - [agents/study-group-formation-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/study-group-formation-agent.ts)
+  - [agents/homework-help-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/homework-help-agent.ts)
+  - [agents/exam-prep-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/exam-prep-agent.ts)
+  - [agents/schedule-coordinator-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/schedule-coordinator-agent.ts)
+  - [agents/motivation-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/agents/motivation-agent.ts)
 - Tool & workflow
-  - `tools/study-buddy-coordinator-tool.ts`
-  - `workflows/study-buddy-workflow.ts`
+  - [tools/study-buddy-coordinator-tool.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/tools/study-buddy-coordinator-tool.ts)
+  - [workflows/study-buddy-workflow.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/study-group-chat-agent/src/mastra/workflows/study-buddy-workflow.ts)
 
 ***
 
