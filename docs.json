@@ -8,12 +8,23 @@
   "navigation": {
     "groups": [
       {
-        "group": "Guides",
+        "group": "Healthcare",
+        "expanded": false,
         "pages": [
-          "guides/patient-faq-agent",
-          "guides/patient-onboarding-workflow",
-          "guides/human-handoff-agent",
-          "guides/coordinator-agent-healthcare"
+          "healthcare/patient-faq-agent",
+          "healthcare/patient-onboarding-workflow",
+          "healthcare/human-handoff-agent",
+          "healthcare/coordinator-agent-healthcare"
+        ]
+      },
+      {
+        "group": "Education",
+        "expanded": false,
+        "pages": [
+          "education/automating-student-enrollment",
+          "education/course-faq-agent",
+          "education/group-project-coordinator-agent",
+          "education/study-group-chat-agent"
         ]
       }
     ]

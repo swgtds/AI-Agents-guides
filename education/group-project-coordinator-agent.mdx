@@ -1,0 +1,309 @@
+# Build Your Group Project Coordinator Agent with Mastra
+
+> Create a Mastra agent that intelligently routes project coordination requests: planning, task assignment, timeline scheduling, progress tracking, and team collaboration — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Coordinator agent** that interprets natural language project requests and routes them to the right specialization.
+- Internal specialist logic categories: `project-planning`, `task-assignment`, `timeline-scheduling`, `progress-tracking`, `team-collaboration`.
+- A single generate endpoint: `/api/agents/groupProjectCoordinatorAgent/generate`.
+- Workflow support via: `group-project-coordinator-workflow`.
+- Optional integration into **CometChat AI Agents**.
+
+***
+
+## Prerequisites
+
+- Existing Mastra project (or this example cloned).
+- Node.js 18+.
+- OpenAI API key in `.env` as: `OPENAI_API_KEY`.
+- (Optional) CometChat app (Dashboard access) if integrating.
+
+***
+
+## Quick links
+
+- Project README: `group-project-coordinator-agent/README.md`
+- Agent source: `src/mastra/agents/group-project-coordinator-agent.ts`
+- Tool: `src/mastra/tools/group-project-coordinator-tool.ts`
+- Workflow: `src/mastra/workflows/group-project-coordinator-workflow.ts`
+- Entrypoint: `src/index.ts` and `src/mastra/index.ts`
+
+***
+
+## How it works
+
+The Group Project Coordinator Agent:
+
+- Accepts a free‑form project coordination request (e.g., “Help schedule our sprint review next Thursday”).
+- Uses internal logic + the `groupProjectCoordinator` tool to classify intent.
+- Responds with structured output including:
+  - Routed specialization (`routedTo`)
+  - Coordination type (planning, task-management, scheduling, tracking, collaboration)
+  - Actionability flag
+  - Next steps list
+  - (Optional) Generated lightweight project context
+- Always ends responses with: `(routedTo | action: yes/no | coordination-type: X)` for traceability.
+
+Key components:
+- Agent: `src/mastra/agents/group-project-coordinator-agent.ts`
+- Tool: `src/mastra/tools/group-project-coordinator-tool.ts`
+- Workflow: `src/mastra/workflows/group-project-coordinator-workflow.ts`
+- Mastra registration: `src/mastra/index.ts`
+
+***
+
+## Core Routing Categories
+
+| Category | Purpose | Example Trigger |
+|----------|---------|-----------------|
+| project-planning | Scope, roadmap, milestones, methodology | “Create a 6‑month roadmap for our mobile app” |
+| task-assignment | Distribute or rebalance work | “Who should own QA and API refactor this sprint?” |
+| timeline-scheduling | Deadlines, calendars, sequencing | “Set milestones for beta launch in 5 weeks” |
+| progress-tracking | Status, blockers, metrics | “Summarize sprint progress and flag risks” |
+| team-collaboration | Communication channels, meeting cadence | “Recommend async standup structure” |
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install & env">
+    Add dependencies (already in example) and set <code>OPENAI_API_KEY</code> in <code>.env</code>.
+  </Step>
+  <Step title="Review agent">
+    Confirm routing logic & instructions in <code>group-project-coordinator-agent.ts</code>.
+  </Step>
+  <Step title="Verify tool & workflow">
+    Ensure <code>group-project-coordinator-tool.ts</code> returns structured fields; workflow composes the step.
+  </Step>
+  <Step title="Run dev server">
+    Start with <code>npm run dev</code> (root or package level depending on setup).
+  </Step>
+  <Step title="Send test message">
+    POST to <code>/api/agents/groupProjectCoordinatorAgent/generate</code> with a planning query.
+  </Step>
+  <Step title="Integrate with CometChat (optional)">
+    Register the agent using its ID: <code>groupProjectCoordinatorAgent</code>.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Relevant files for the coordinator agent:
+
+- Config
+  - `package.json`
+  - `tsconfig.json`
+  - `README.md`
+- Agents
+  - `src/mastra/agents/group-project-coordinator-agent.ts`
+  - Specialist agents (if any future extension) in same folder
+- Tool
+  - `src/mastra/tools/group-project-coordinator-tool.ts`
+- Workflow
+  - `src/mastra/workflows/group-project-coordinator-workflow.ts`
+- Registration
+  - `src/mastra/index.ts`
+  - `src/index.ts`
+- Runtime build
+  - `.mastra/output/index.mjs` (generated)
+
+***
+
+## Step 1 - Define the Agent
+
+Ensure the agent:
+- Has a stable name mapping to API path segment: <code>groupProjectCoordinatorAgent</code>.
+- Provides clear instructions for routing categories.
+- Calls the tool with input: <code>request</code>, <code>teamMember?</code>.
+- Returns structured JSON used in responses and optionally UI.
+
+***
+
+## Step 2 - Workflow Support
+
+The workflow wraps a step (`coordinate-project-request`) that executes tool logic. This enables future chaining (e.g., persistence, notification steps) without altering the agent contract.
+
+***
+
+## Step 3 - Run Locally
+
+<Steps>
+  <Step title="Install deps">Use the monorepo root or package scripts.</Step>
+  <Step title="Start server"><code>npm run dev</code></Step>
+  <Step title="Health check">Send a simple planning request via curl.</Step>
+  <Step title="Observe output">Verify the trailing routing signature is present.</Step>
+</Steps>
+
+Example base URL: <code>http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate</code>
+
+***
+
+## Example Requests (curl)
+
+```bash
+# Project planning
+curl -X POST http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{ "role": "user", "content": "Create a 3 month roadmap for our SaaS onboarding module" }]
+  }'
+```
+```bash
+# Task assignment
+curl -X POST http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{ "role": "user", "content": "Distribute frontend refactor, API caching, and QA automation tasks across Alice Bob and Priya" }]
+  }'
+```
+```bash
+# Timeline scheduling
+curl -X POST http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{ "role": "user", "content": "Set milestone dates for alpha beta and GA over the next 10 weeks" }]
+  }'
+```
+```bash
+# Progress tracking
+curl -X POST http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{ "role": "user", "content": "Summarize current sprint status and highlight blockers" }]
+  }'
+```
+```bash
+# Team collaboration
+curl -X POST http://localhost:4111/api/agents/groupProjectCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [{ "role": "user", "content": "Recommend async communication setup for a partially distributed team" }]
+  }'
+```
+
+***
+
+## Step 4 - Deploy
+
+Expose the generate endpoint publicly (reverse proxy or hosting platform). Validate that:
+- POST `/api/agents/groupProjectCoordinatorAgent/generate` reachable externally.
+- Latency acceptable (< 3s typical for GPT‑4 small prompts).
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Log into <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents section">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Provider = Mastra, Agent ID = <code>groupProjectCoordinatorAgent</code>, URL = public generate endpoint.</Step>
+  <Step title="Save & enable">Ensure status shows <b>Enabled</b>.</Step>
+</Steps>
+
+> Multiple assistants? Use variants or add additional Mastra agents (e.g., dedicated planning agent) later.
+
+***
+
+## Step 6 - Test in Chat Builder
+
+<Steps>
+  <Step title="Launch builder">Open the agent variant.</Step>
+  <Step title="Send prompts">Try each coordination category phrase.</Step>
+  <Step title="Check signature">Verify final line contains routing tuple.</Step>
+</Steps>
+
+***
+
+## Step 7 - Integrate
+
+<CardGroup>
+  <Card title="Widget" href="/widget/ai-agents" horizontal>Embed quickly in web app</Card>
+  <Card title="React UI Kit" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt components</Card>
+</CardGroup>
+
+***
+
+## Step 8 - Validation Checklist
+
+<Steps>
+  <Step title="Routing works">Different prompts map to correct <code>routedTo</code>.</Step>
+  <Step title="Action flag"><code>actionTaken</code> true when guidance produced.</Step>
+  <Step title="Next steps list">Always non-empty and relevant.</Step>
+  <Step title="Signature present">Response ends with expected pattern.</Step>
+</Steps>
+
+***
+
+## Sample Response Shape
+
+```json
+{
+  "response": "High-level roadmap ... (project-planning | action: yes | coordination-type: planning)",
+  "routedTo": "project-planning",
+  "actionTaken": true,
+  "coordinationType": "planning",
+  "nextSteps": ["Define MVP scope", "Prioritize backlog", "Establish milestone dates"],
+  "projectDetails": {
+    "projectName": "SaaS Onboarding Revamp",
+    "projectType": "Software Development",
+    "projectId": "PROJ-1234567890"
+  }
+}
+```
+
+***
+
+## Security & Production Checklist
+
+- Add auth (API key / JWT) before exposing publicly.
+- Restrict CORS to trusted origins.
+- Rate-limit the generate endpoint.
+- Log routing stats (planning vs task-assignment distribution) to monitor usage.
+- Implement retries / backoff for upstream model errors.
+- Cache identical recent prompts if needed to reduce cost.
+
+***
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Always returns planning | Prompt ambiguous | Provide clearer verbs (assign, schedule, track) |
+| Missing signature line | Instruction drift | Reconfirm agent instructions & restart build |
+| Empty nextSteps | Tool error | Inspect server logs for thrown errors |
+| High latency | Model selection | Switch to faster model or summarize prompt |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""    # Required
+PORT=4111             # Local server port
+```
+
+***
+
+## Extend the Agent
+
+Future ideas:
+- Add persistence: store project contexts in a database.
+- Add calendar integration (Google / Outlook) for scheduling.
+- Add notification hooks (Slack / email) on blocker detection.
+- Chain multi-step workflows (e.g., plan → assign → schedule automatically).
+
+***
+
+## Next Steps
+
+- Connect to CometChat and test multi-user conversations.
+- Add analytics (routing frequency, response time).
+- Introduce versioned instructions for A/B testing.
+
+> The Group Project Coordinator Agent is now ready to organize your team’s work with structured, explainable routing.

@@ -1,0 +1,312 @@
+### Build Your Student Enrollment Workflow Agent with Mastra
+
+> Create a Mastra agent that automates student enrollment: collects info, processes documents, verifies academics, evaluates admission, and registers courses — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agents** for enrollment guidance, admissions counseling, and registrar operations.
+- Triggered on demand (explicit API calls; can restrict chat usage to mentions).
+- Endpoints for end-to-end enrollment: initiate, collect info, process docs, verify academics, aid processing, admission evaluation, registration, and status.
+- Integrated into **CometChat** chats.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 18+ installed.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- A CometChat app.
+
+***
+
+## Quick links
+
+- **Project README**: `automating-student-enrollment/README.md`
+- **Swagger UI (local)**: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- **Environment variables**: see [README](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/README.md) → Environment Variables
+
+***
+
+## How it works
+
+This example implements a workflow-oriented Enrollment Agent that:
+
+- Orchestrates enrollment via REST routes (initiate → info → documents → verification → aid → admission → registration → status).
+- Uses tools in [src/mastra/tools/enrollment-tools.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/tools/enrollment-tools.ts) for document OCR/extraction, academic verification, financial aid processing, admission evaluation, and course registration.
+- Exposes chat agents:
+  - `student-enrollment` for workflow guidance and tool invocation.
+  - `admission-counselor` for personalized counseling.
+  - `registrar` for records and registration support.
+- Handles errors defensively with sanitized server responses.
+
+Key components:
+- Agents: [src/mastra/agents/enrollment-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/agents/enrollment-agent.ts)
+- Tools: [src/mastra/tools/enrollment-tools.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/tools/enrollment-tools.ts), [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/tools/index.ts)
+- Routes: [src/mastra/server/routes/enrollment.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes/enrollment.ts)
+- Server: [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes.ts), [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/index.ts)
+- Types: [src/types/student.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/types/student.ts)
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>. Start from the <code>automating-student-enrollment</code> folder.
+  </Step>
+
+  <Step title="Define the agents">
+    Ensure the <b>student-enrollment</b> agent provides step-by-step guidance and calls workflow tools. Optionally expose <b>admission-counselor</b> and <b>registrar</b>.
+  </Step>
+
+  <Step title="Register in server">
+    Register agents and mount enrollment routes under <code>/api/enrollment/*</code>. Confirm agent paths like <code>/api/agents/student-enrollment/generate</code> are available via [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/index.ts) and [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes.ts).
+  </Step>
+
+  <Step title="Run locally">
+    Use the scripts in <code>package.json</code> (<code>npm run dev</code>). Visit Swagger UI at <a href="http://localhost:4111/swagger-ui" target="_blank" rel="noreferrer">swagger-ui</a>.
+  </Step>
+
+  <Step title="Walk the workflow">
+    Use the enrollment endpoints: initiate application, update personal/academic/financial info, process documents, verify academics, process financial aid, evaluate admission, register courses, and fetch status.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>student-enrollment</code>, and point Deployment URL to your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files and folders for the Student Enrollment Workflow Agent:
+
+- Runtime & config
+  - [automating-student-enrollment/package.json](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/package.json)
+  - [automating-student-enrollment/tsconfig.json](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/tsconfig.json)
+  - [automating-student-enrollment/README.md](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/README.md)
+- Agents
+  - [automating-student-enrollment/src/mastra/agents/enrollment-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/agents/enrollment-agent.ts)
+- Tools
+  - [automating-student-enrollment/src/mastra/tools/enrollment-tools.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/tools/enrollment-tools.ts)
+  - [automating-student-enrollment/src/mastra/tools/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/tools/index.ts)
+- Server
+  - [automating-student-enrollment/src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/index.ts)
+  - [automating-student-enrollment/src/mastra/server/routes.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes.ts)
+  - [automating-student-enrollment/src/mastra/server/routes/enrollment.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes/enrollment.ts)
+  - [automating-student-enrollment/src/mastra/server/util/safeErrorMessage.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/util/safeErrorMessage.ts)
+- Types
+  - [automating-student-enrollment/src/types/student.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/types/student.ts)
+
+***
+
+## Step 1 - Create the Agent
+
+Ensure [src/mastra/agents/enrollment-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/agents/enrollment-agent.ts) registers agents with:
+
+- <b>name</b> set to "student-enrollment" so the API path is <code>/api/agents/student-enrollment/*</code>. Optional additional agents: "admission-counselor", "registrar".
+- Behavior: guide users step-by-step through enrollment; call tools for document processing, verification, aid, admission, and registration.
+- Tools: <code>documentProcessor</code>, <code>academicVerifier</code>, <code>financialAidProcessor</code>, <code>admissionEvaluator</code>, <code>courseRegistrar</code>.
+
+***
+
+## Step 2 - Register the Agent in Mastra
+
+In [src/mastra/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/index.ts) and [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/automating-student-enrollment/src/mastra/server/routes.ts):
+
+- Register agents with keys <b>"student-enrollment"</b>, <b>"admission-counselor"</b>, <b>"registrar"</b> → API paths <code>/api/agents/&lt;agent&gt;/generate</code>.
+- Mount enrollment routes under <code>/api/enrollment/*</code>.
+- Enable Swagger UI via the Mastra server config.
+- Verify the server runs and endpoints respond (Postman/curl).
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: `http://localhost:4111/api`
+
+<Steps>
+  <Step title="Install dependencies">
+    From the folder, run <code>npm install</code>.
+  </Step>
+
+  <Step title="Start the dev server">
+    Run <code>npm run dev</code>. Open <a href="http://localhost:4111/swagger-ui" target="_blank" rel="noreferrer">Swagger UI</a>.
+  </Step>
+
+  <Step title="Initiate enrollment">
+    POST to <code>/api/enrollment/initiate</code> to create a new application.
+  </Step>
+
+  <Step title="Ask the enrollment agent">
+    POST to <code>/api/agents/student-enrollment/generate</code> with a <code>messages</code> array.
+  </Step>
+</Steps>
+
+API endpoints exposed by this example (see Swagger UI):
+
+- POST <code>/api/enrollment/initiate</code> — start new student application
+- PUT <code>/api/enrollment/:applicationId/personal-info</code> — update personal information
+- PUT <code>/api/enrollment/:applicationId/academic-background</code> — update academic background
+- PUT <code>/api/enrollment/:applicationId/financial-info</code> — update financial information
+- PUT <code>/api/enrollment/:applicationId/program-selection</code> — select intended program
+- POST <code>/api/enrollment/:applicationId/process-document</code> — process academic documents
+- POST <code>/api/enrollment/:applicationId/verify-academic</code> — verify academic credentials
+- POST <code>/api/enrollment/:applicationId/process-financial-aid</code> — process financial aid
+- POST <code>/api/enrollment/:applicationId/evaluate-admission</code> — evaluate for admission
+- POST <code>/api/enrollment/:applicationId/register-courses</code> — register for courses
+- GET <code>/api/enrollment/:applicationId/status</code> — application status
+- POST <code>/api/agents/student-enrollment/generate</code> — chat with enrollment agent
+- POST <code>/api/agents/admission-counselor/generate</code> — counseling support
+- POST <code>/api/agents/registrar/generate</code> — registrar support
+
+***
+
+## Step 4 - Deploy the API
+
+- Swagger UI: `http://localhost:4111/swagger-ui`
+- Environment variables: see `automating-student-enrollment/README.md` → Environment Variables
+
+Ensure the public route: **`/api/agents/student-enrollment/generate`** is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>student-enrollment</code>, <b>Deployment URL</b>=your public generate endpoint.</Step>
+  <Step title="(Optional) Add agents">Add <b>admission-counselor</b> or <b>registrar</b> similarly if you expose them.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: Overview · Instructions · Custom agents
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Mastra Enrollment agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses and tool triggers.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+Once your agent is configured, integrate it into your app:
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> Note: The <b>student-enrollment</b> agent you connected is part of the exported configuration; end‑users can chat with it immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="API generates response">POST to <code>/api/agents/student-enrollment/generate</code> returns a guided enrollment response.</Step>
+  <Step title="Agent listed"><code>/api/agents</code> includes <code>"student-enrollment"</code> and others if registered.</Step>
+  <Step title="Workflow works">Enrollment endpoints progress application status correctly.</Step>
+  <Step title="Full sample test (run curl)">See curl commands below.</Step>
+</Steps>
+
+```bash
+# Chat with the enrollment agent
+curl -X POST http://localhost:4111/api/agents/student-enrollment/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      { "role": "user", "content": "help me start student enrollment" }
+    ]
+  }'
+```
+
+```bash
+# Initiate a new application
+curl -X POST http://localhost:4111/api/enrollment/initiate \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+```bash
+# Update personal info
+curl -X PUT http://localhost:4111/api/enrollment/{applicationId}/personal-info \
+  -H 'Content-Type: application/json' \
+  -d '{ "firstName": "Jane", "lastName": "Smith", "dateOfBirth": "2005-03-15", "ssn": "123-45-6789", "phone": "+1-555-123-4567", "email": "jane@example.com", "address": { "street": "456 College Ave", "city": "Anytown", "state": "CA", "zipCode": "90210", "country": "US" }, "emergencyContact": { "name": "Robert Smith", "relationship": "Father", "phone": "+1-555-987-6543" } }'
+```
+
+```bash
+# Process academic document
+curl -X POST http://localhost:4111/api/enrollment/{applicationId}/process-document \
+  -H 'Content-Type: application/json' \
+  -d '{ "documentType": "high_school_transcript", "documentName": "lincoln_high_transcript.pdf", "documentImage": "data:image/pdf;base64,..." }'
+```
+
+```bash
+# Verify academics
+curl -X POST http://localhost:4111/api/enrollment/{applicationId}/verify-academic \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+```bash
+# Evaluate admission
+curl -X POST http://localhost:4111/api/enrollment/{applicationId}/evaluate-admission \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+```bash
+# Register courses
+curl -X POST http://localhost:4111/api/enrollment/{applicationId}/register-courses \
+  -H 'Content-Type: application/json' \
+  -d '{ "coursePreferences": [ { "courseCode": "CS101", "courseName": "Introduction to Programming", "priority": "required" } ] }'
+```
+
+```bash
+# Check status
+curl -X GET http://localhost:4111/api/enrollment/{applicationId}/status
+```
+
+***
+
+## Security & production checklist
+
+- Protect endpoints with auth (API key/JWT) and restrict CORS.
+- Rate limit and set request size limits for document and generate routes.
+- Validate inputs with schemas (<code>zod</code>), avoid storing sensitive PII unnecessarily.
+- Monitor logs and sanitize error responses with <code>safeErrorMessage</code>.
+- Keep your OpenAI key server-side only.
+
+## Troubleshooting
+
+- **Agent not responding**: verify the agent path <code>/api/agents/student-enrollment/generate</code> and server is running.
+- **Verification blocked**: ensure personal info, academic background, and documents exist before verification.
+- **Status incorrect**: confirm you’re using the same <code>applicationId</code> across steps.
+- **404 / Route missing**: confirm routes in <code>src/mastra/server/routes.ts</code> are mounted.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""                    # Required: OpenAI API key
+PORT=4111                            # Server port
+```

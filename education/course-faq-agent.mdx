@@ -1,0 +1,270 @@
+### Build Your Course FAQ Agent with Mastra
+
+> Create a Mastra agent that answers course questions: searches docs, references syllabi and notes, and returns grounded, source-linked responses — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agent** specialized for course FAQs and educational support.
+- Triggered via explicit chat API calls; can scope to mentions if desired.
+- Endpoints for chat, document search, and content ingestion.
+- Integrated into **CometChat** chats.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 18+ installed.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- A CometChat app.
+
+***
+
+## Quick links
+
+- **Project README**: `course-faq-agent/README.md`
+- **Swagger UI (local)**: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- **Environment variables**: see [README](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/course-faq-agent/README.md) → Environment Variables
+
+***
+
+## How it works
+
+This example implements a Course FAQ Agent that:
+
+- Uses a documents retriever tool to query course knowledge in `knowledge/courses/`.
+- Supports chat responses grounded in retrieved sources, with a sources list.
+- Provides ingestion and search routes so you can add and query course materials.
+- Persists conversation memory in LibSQL for context-aware answers.
+
+Key components:
+- Agent: [src/mastra/agents/course-faq-agent.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/course-faq-agent/src/mastra/agents/course-faq-agent.ts)
+- Tools: [src/mastra/tools/docs-retriever.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/course-faq-agent/src/mastra/tools/docs-retriever.ts), [src/mastra/tools/ingest-sources.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/course-faq-agent/src/mastra/tools/ingest-sources.ts), [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/education-AI-Agent/blob/main/course-faq-agent/src/mastra/tools/index.ts)
+- Routes: `src/mastra/server/routes.ts`
+- Server: `src/mastra/index.ts`, `src/mastra/server/util/safeErrorMessage.ts`
+- Knowledge: `knowledge/courses/*`
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> in <code>.env</code>. Ensure your course materials live under <code>knowledge/courses/</code>.
+  </Step>
+
+  <Step title="Define the agent">
+    Ensure the <b>course-faq</b> agent uses the <code>docsRetriever</code> tool and has instructions to cite sources and stay grounded in course docs.
+  </Step>
+
+  <Step title="Register in server">
+    Register the <b>course-faq</b> agent and expose API routes: <code>/api/chat</code>, <code>/api/tools/searchDocs</code>, and <code>/api/tools/ingestSources</code>.
+  </Step>
+
+  <Step title="Run locally">
+    Start with <code>npm run dev</code>. Visit <a href="http://localhost:4111/swagger-ui" target="_blank" rel="noreferrer">Swagger UI</a> to explore endpoints.
+  </Step>
+
+  <Step title="Add content">
+    Place <code>.md</code>/<code>.mdx</code>/<code>.txt</code> files into <code>knowledge/courses/</code>, or use the ingestion endpoint to add sources.
+  </Step>
+
+  <Step title="Connect to CometChat">
+    In Dashboard → AI Agents, set Provider=Mastra, Agent ID=<code>course-faq</code>, and point Deployment URL to your public chat endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - `course-faq-agent/package.json`
+  - `course-faq-agent/tsconfig.json`
+  - `course-faq-agent/README.md`
+- Agent
+  - `course-faq-agent/src/mastra/agents/course-faq-agent.ts`
+- Tools
+  - `course-faq-agent/src/mastra/tools/docs-retriever.ts`
+  - `course-faq-agent/src/mastra/tools/ingest-sources.ts`
+  - `course-faq-agent/src/mastra/tools/index.ts`
+- Server
+  - `course-faq-agent/src/mastra/index.ts`
+  - `course-faq-agent/src/mastra/server/routes.ts`
+  - `course-faq-agent/src/mastra/server/util/safeErrorMessage.ts`
+- Knowledge
+  - `course-faq-agent/knowledge/courses/`
+
+***
+
+## Step 1 - Create the Agent
+
+Ensure `src/mastra/agents/course-faq-agent.ts` registers an agent with:
+
+- <b>name</b>: "course-faq" → API path `/api/agents/course-faq/*` (if you expose the agent routes) or use the provided chat route.
+- <b>tools</b>: includes <code>docsRetriever</code> to search course materials under a namespace (default <code>courses</code>).
+- <b>memory</b>: uses LibSQL for persistent conversation context.
+- <b>instructions</b>: encourage citations, academic integrity, and grounded answers with a Sources section.
+
+***
+
+## Step 2 - Register the Agent in Mastra
+
+In `src/mastra/index.ts` and `src/mastra/server/routes.ts`:
+
+- Register the agent with key <b>"course-faq"</b>.
+- Expose utility routes:
+  - <code>POST /api/tools/ingestSources</code> — add URLs/files to knowledge
+  - <code>POST /api/tools/searchDocs</code> — search knowledge namespace
+  - <code>POST /api/chat</code> — chat with the agent
+- Enable Swagger UI for local exploration.
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: `http://localhost:4111/api`
+
+<Steps>
+  <Step title="Install dependencies">
+    Run <code>npm install</code>.
+  </Step>
+
+  <Step title="Start the dev server">
+    Run <code>npm run dev</code>. Open <a href="http://localhost:4111/swagger-ui" target="_blank" rel="noreferrer">Swagger UI</a>.
+  </Step>
+
+  <Step title="Ingest materials">
+    Use <code>/api/tools/ingestSources</code> to add URLs or files to the <code>courses</code> namespace.
+  </Step>
+
+  <Step title="Search docs">
+    Use <code>/api/tools/searchDocs</code> to test retrieval for a query.
+  </Step>
+
+  <Step title="Chat with the agent">
+    POST to <code>/api/chat</code> with a plain <code>message</code> string.
+  </Step>
+</Steps>
+
+API endpoints exposed by this example (see Swagger UI):
+
+- POST <code>/api/tools/ingestSources</code> — ingest new course materials (URLs/files)
+- POST <code>/api/tools/searchDocs</code> — search course documents
+- POST <code>/api/chat</code> — chat with the Course FAQ agent
+
+***
+
+## Step 4 - Deploy the API
+
+- Swagger UI: `http://localhost:4111/swagger-ui`
+- Ensure your public route: <b>`/api/chat`</b> (or your exposed agent generate route) is reachable.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Open the <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Navigate">Go to your App → <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Set <b>Provider</b>=Mastra, <b>Agent ID</b>=<code>course-faq</code>, <b>Deployment URL</b>=your public chat endpoint.</Step>
+  <Step title="Enable">Save and ensure the agent toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+> For more on CometChat AI Agents, see the docs: Overview · Instructions · Custom agents
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">From <b>AI Agents</b> click the variant (or Get Started) to enter Chat Builder.</Step>
+  <Step title="Customize & Deploy">Select <b>Customize and Deploy</b>.</Step>
+  <Step title="Adjust settings">Theme, layout, features; ensure the Course FAQ agent is attached.</Step>
+  <Step title="Preview">Use live preview to validate responses and doc citations.</Step>
+</Steps>
+
+<Frame>
+  <img src="https://mintcdn.com/cometchat-22654f5b/2U5tVIzH12dbbFtr/images/ai-agent-chat-builder-preview.png?fit=max&auto=format&n=2U5tVIzH12dbbFtr&q=85&s=7e5a476c0f779f984406b979ed12f972" width="5760" height="3200" />
+</Frame>
+
+***
+
+## Step 7 - Integrate
+
+<CardGroup>
+  <Card title="No Code - Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed / script" href="/widget/ai-agents" horizontal />
+
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Pre Built UI Components</Card>
+</CardGroup>
+
+> Note: The <b>course-faq</b> agent you connected is part of the exported configuration; users can chat with it immediately.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="Chat endpoint works">POST to <code>/api/chat</code> returns a grounded answer.</Step>
+  <Step title="Search works">POST to <code>/api/tools/searchDocs</code> returns relevant docs.</Step>
+  <Step title="Ingestion works">POST to <code>/api/tools/ingestSources</code> adds materials to <code>knowledge/courses/</code>.</Step>
+  <Step title="Full sample test (run curl)">See curl commands below.</Step>
+</Steps>
+
+```bash
+# Chat with the course FAQ agent
+curl -X POST http://localhost:4111/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What is the grading breakdown for CS101?"
+  }'
+```
+
+```bash
+# Search documents for a query
+curl -X POST http://localhost:4111/api/tools/searchDocs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "late submission policy",
+    "namespace": "courses",
+    "maxResults": 6
+  }'
+```
+
+```bash
+# Ingest new course material from a URL
+curl -X POST http://localhost:4111/api/tools/ingestSources \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sources": ["https://example.com/syllabus.pdf"],
+    "namespace": "courses"
+  }'
+```
+
+***
+
+## Security & production checklist
+
+- Protect endpoints with auth (API key/JWT) and restrict CORS.
+- Rate limit and set request size limits for ingestion and chat routes.
+- Validate inputs with schemas (<code>zod</code>); sanitize file/URL ingestion.
+- Monitor logs and sanitize error responses using <code>safeErrorMessage</code> utilities.
+- Keep your OpenAI key server-side only.
+
+## Troubleshooting
+
+- **Empty answers**: ensure course files exist under <code>knowledge/courses/</code>.
+- **Search returns no matches**: broaden queries or verify filenames and content.
+- **404 routes**: verify server is running and paths in <code>src/mastra/server/routes.ts</code>.
+- **Missing API key**: set <code>OPENAI_API_KEY</code> in <code>.env</code>.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""                    # Required: OpenAI API key
+PORT=4111                            # Server port
+```

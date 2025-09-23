@@ -1,0 +1,317 @@
+# Build Your Study Buddy Group Chat Agent with Mastra
+
+> Create a Mastra agent that coordinates student academic requests: forms study groups, provides homework help, structures exam prep, schedules sessions, and boosts motivation — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra study coordination agent** that analyzes natural language student requests.
+- Routed academic support categories: study group formation, homework help, exam prep, scheduling, motivation.
+- One primary chat endpoint: `/api/agents/studyBuddyGroupChatAgent/generate`.
+- A workflow (`study-buddy-workflow`) that standardizes routing + output shape.
+- Optional CometChat integration for real‑time collaborative learning.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`) or this example cloned.
+- Node.js 18+ installed (20+ recommended as per package engines).
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- (Optional) A CometChat app for live deployment.
+
+***
+
+## Quick links
+
+- **Project README**: `study-group-chat-agent/README.md`
+- **Primary Agent**: `src/mastra/index.ts` (agent registration)
+- **Coordinator Logic**: `src/mastra/agents/study-buddy-coordinator-agent.ts`
+- **Specialists**: `src/mastra/agents/`
+  - `study-group-formation-agent.ts`
+  - `homework-help-agent.ts`
+  - `exam-prep-agent.ts`
+  - `schedule-coordinator-agent.ts`
+  - `motivation-agent.ts`
+- **Tool**: `src/mastra/tools/study-buddy-coordinator-tool.ts`
+- **Workflow**: `src/mastra/workflows/study-buddy-workflow.ts`
+
+***
+
+## How it works
+
+This example implements a routed Study Buddy Agent that:
+
+- Interprets free‑form academic or support requests (e.g., “I need a study group for physics” / “Help me prepare for my biology midterm”).
+- Uses keyword & semantic parsing to route to the appropriate specialist.
+- Returns structured metadata: `routedTo`, `helpType`, `actionTaken`, `studySessionDetails`, `nextSteps`.
+- Always ends the message with: `(routedTo | action: yes/no | help-type: [helpType])` for traceability in UI logs.
+- Wraps execution in a workflow (`study-buddy-workflow`) so future multi-step extensions (persistence, notifications) are easy.
+
+Key components:
+- Agent container: `src/mastra/index.ts`
+- Coordinator: `study-buddy-coordinator-agent.ts`
+- Tool bridge: `study-buddy-coordinator-tool.ts`
+- Workflow: `study-buddy-workflow.ts`
+- Specialists: group formation, homework, exam prep, schedule, motivation
+
+***
+
+## Academic Routing Categories
+
+| Category | helpType | Purpose | Example Request |
+|----------|----------|---------|-----------------|
+| study-group | group-formation | Form or join a collaborative group | "Find a study group for calculus" |
+| homework-help | academic-assistance | Peer explanation & problem support | "I’m stuck on this physics assignment" |
+| exam-prep | exam-preparation | Structured review & preparation | "Help me study for chemistry midterm" |
+| schedule | scheduling | Coordinate times & availability | "Schedule a session tomorrow evening" |
+| motivation | motivation-support | Encouragement & habit building | "I'm overwhelmed and need motivation" |
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies inside <code>study-group-chat-agent</code> and add <code>OPENAI_API_KEY</code> in <code>.env</code>.
+  </Step>
+  <Step title="Review coordinator">
+    Inspect <code>study-buddy-coordinator-agent.ts</code> to understand keyword routing & defaults.
+  </Step>
+  <Step title="Inspect specialists">
+    Each specialist agent returns structured session or support guidance (see <code>agents/</code> folder).
+  </Step>
+  <Step title="Workflow & tool">
+    The tool (<code>study-buddy-coordinator-tool.ts</code>) + workflow (<code>study-buddy-workflow.ts</code>) enforce schema & output shape.
+  </Step>
+  <Step title="Run locally">
+    Use <code>npm run dev</code> (or <code>npx mastra dev</code>) to start the Mastra server.
+  </Step>
+  <Step title="Send test requests">
+    POST to <code>/api/agents/studyBuddyGroupChatAgent/generate</code> with different academic prompts.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files for the Study Buddy Agent:
+
+- Runtime & config
+  - `package.json`
+  - `tsconfig.json`
+  - `README.md`
+- Agent & registration
+  - `src/mastra/index.ts`
+- Coordinator & specialists
+  - `agents/study-buddy-coordinator-agent.ts`
+  - `agents/study-group-formation-agent.ts`
+  - `agents/homework-help-agent.ts`
+  - `agents/exam-prep-agent.ts`
+  - `agents/schedule-coordinator-agent.ts`
+  - `agents/motivation-agent.ts`
+- Tool & workflow
+  - `tools/study-buddy-coordinator-tool.ts`
+  - `workflows/study-buddy-workflow.ts`
+
+***
+
+## Step 1 - Coordinator & Specialists
+
+The coordinator:
+- Determines routing using keyword sets (group formation, homework, exam prep, schedule, motivation).
+- Falls back to study group formation for ambiguous queries.
+- Produces normalized output consumed by downstream UI or chat clients.
+
+Specialists:
+- Provide context-specific messaging (e.g., exam plan, homework session, motivation strategies).
+- Simulate session metadata (sessionId, subject, participants, scheduledTime).
+
+***
+
+## Step 2 - Tool & Workflow
+
+- The tool (`studyBuddyCoordinatorTool`) exposes a consistent callable API for the agent.
+- The workflow (`studyBuddyWorkflow`) enforces schemas with Zod, enabling expansion (e.g., persistence steps) without breaking the interface.
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API base: <code>http://localhost:4111/api</code>
+
+<Steps>
+  <Step title="Install dependencies">From the package directory run <code>npm install</code>.</Step>
+  <Step title="Dev server">Start with <code>npm run dev</code>.</Step>
+  <Step title="Test group formation">Send a request about finding a study group.</Step>
+  <Step title="Test each category">Run curl samples below to validate routing.</Step>
+</Steps>
+
+Sample endpoints:
+- POST <code>/api/agents/studyBuddyGroupChatAgent/generate</code>
+
+***
+
+## Example Requests (curl)
+
+```bash
+# Study group formation
+curl -X POST http://localhost:4111/api/agents/studyBuddyGroupChatAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"I need a study group for physics"}]}'
+```
+```bash
+# Homework help
+curl -X POST http://localhost:4111/api/agents/studyBuddyGroupChatAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Explain this calculus homework problem"}]}'
+```
+```bash
+# Exam preparation
+curl -X POST http://localhost:4111/api/agents/studyBuddyGroupChatAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Help me prepare for my chemistry midterm"}]}'
+```
+```bash
+# Schedule coordination
+curl -X POST http://localhost:4111/api/agents/studyBuddyGroupChatAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Can we schedule a group study session tomorrow evening"}]}'
+```
+```bash
+# Motivation support
+curl -X POST http://localhost:4111/api/agents/studyBuddyGroupChatAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"I feel overwhelmed and need study motivation"}]}'
+```
+
+***
+
+## Step 4 - Deploy the API
+
+- Expose <code>/api/agents/studyBuddyGroupChatAgent/generate</code> via your hosting (Vercel / Fly.io / Render / custom server).
+- Keep response signature consistent for client parsing.
+- (Optional) Add persistence for sessions & group membership.
+
+***
+
+## Step 5 - Configure in CometChat
+
+<Steps>
+  <Step title="Open Dashboard">Go to <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Add agent">Provider = Mastra, Agent ID = <code>studyBuddyGroupChatAgent</code>, URL = public generate endpoint.</Step>
+  <Step title="Save & enable">Ensure status shows <b>Enabled</b>.</Step>
+</Steps>
+
+> Want multiple specialized agents visible? Register each specialist separately in Mastra later.
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Launch variant">Open the configured AI Agent variant.</Step>
+  <Step title="Test prompts">Try one prompt per routing category.</Step>
+  <Step title="Confirm signature">Check trailing line: <code>(routedTo | action: yes/no | help-type: X)</code>.</Step>
+</Steps>
+
+***
+
+## Step 7 - Integrate
+
+<CardGroup>
+  <Card title="Widget" href="/widget/ai-agents" horizontal>Embed in minutes</Card>
+  <Card title="React UI Kit" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt academic assistant UI</Card>
+</CardGroup>
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="Successful routing">Responses include correct <code>routedTo</code>.</Step>
+  <Step title="Action flag"><code>actionTaken</code> is true for formed sessions or support delivered.</Step>
+  <Step title="Session metadata">Study session objects include a generated <code>sessionId</code>.</Step>
+  <Step title="Next steps">Always returns actionable guidance.</Step>
+</Steps>
+
+***
+
+## Sample Response (Study Group)
+
+```json
+{
+  "response": "Great! I'll help you form a study group for Physics... (study-group | action: yes | help-type: group-formation)",
+  "routedTo": "study-group",
+  "actionTaken": true,
+  "studySessionDetails": {
+    "subject": "Physics",
+    "type": "Collaborative Study Group",
+    "participants": ["Student", "Study Partner 1", "Study Partner 2"],
+    "scheduledTime": "Next available slot",
+    "sessionId": "GROUP-1730000000000"
+  },
+  "helpType": "group-formation",
+  "nextSteps": [
+    "Connect with matched study partners",
+    "Schedule first session",
+    "Define shared goals",
+    "Share study materials"
+  ]
+}
+```
+
+***
+
+## Security & Production Checklist
+
+- Add authentication (API key/JWT) before public exposure.
+- Restrict CORS to trusted origins.
+- Rate limit the generate endpoint (prevent abuse / prompt flooding).
+- Log routing distribution for analytics (planning future improvements).
+- Consider persistent DB for: user profiles, group membership, study history.
+- Sanitize user inputs (avoid injection in logs or prompts).
+
+***
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Always routed to study-group | Ambiguous prompts | Add category verb ("schedule", "exam", "motivation") |
+| Missing signature line | Instruction drift | Reboot server; verify agent instructions in code |
+| No session details | Category not requiring session | Expected for motivation requests |
+| High latency | Model complexity | Swap to faster model (e.g., gpt-4o-mini) |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required: OpenAI key
+PORT=4111            # Local dev server port
+```
+
+***
+
+## Extend the Agent
+
+Future enhancements:
+- Calendar integration (Google / Outlook) for real scheduling
+- Slack / Discord notifications for session reminders
+- Persistence layer for longitudinal study progress
+- Badging / gamification for group participation
+- Adaptive routing using embeddings (semantic > keyword)
+
+***
+
+## Next Steps
+
+- Connect to CometChat and validate multi-user usage.
+- Add analytics dashboards (routing frequency, session counts).
+- Introduce moderation or academic integrity checks if needed.
+
+> Your Study Buddy Group Chat Agent now delivers structured, explainable academic support across core student collaboration scenarios.
