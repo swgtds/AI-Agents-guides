@@ -1,0 +1,271 @@
+# Build Your Retail FAQ Knowledge Agent with Mastra
+
+> Create a Mastra knowledge agent that ingests retail help content (shipping, returns, payments), performs semantic search, and answers customer questions — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra knowledge agent**: `retail-faq` for customer service Q&A.
+- Retrieval + ingestion tools for markdown, web pages, PDFs, and text content.
+- API routes to ingest sources and perform semantic search before answer generation.
+- Integration pattern for **CometChat AI Agents** (single agent) or any custom chat UI.
+
+***
+
+## Prerequisites
+
+- A Mastra project (or this example)
+- Node.js 18+ (20+ recommended)
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app for deployment
+
+***
+
+## Quick Links
+
+- **Project README**: ./README.md
+- **Agent**: `src/mastra/agents/retail-faq-agent.ts`
+- **Tools**: `src/mastra/tools/docs-retriever.ts`, `src/mastra/tools/ingest-sources.ts`
+- **Routes**: `src/mastra/server/routes/routes/searchDocs.ts`, `src/mastra/server/routes/routes/ingest.ts`
+- **Server Root**: `src/mastra/server/routes.ts`, `src/mastra/index.ts`
+- **Environment Variables**: `.env.example`
+
+***
+
+## How It Works
+
+The Retail FAQ Knowledge Agent adds retrieval-augmented responses on top of curated FAQ content:
+
+- Content (markdown, PDF, HTML, text) is ingested & chunked under a **namespace** (e.g. `retail`).
+- A semantic index is created (Mastra storage / embeddings) for fast similarity lookup.
+- Incoming user question → retrieval tool fetches top matching chunks.
+- Agent composes grounded answer referencing retrieved facts (avoid hallucinations).
+- Additional ingestion endpoints allow dynamic updating of the knowledge base without redeploying.
+
+Key components:
+- Agent: `retail-faq-agent.ts` (instructions + retrieval usage)
+- Tools: `docs-retriever.ts` (search), `ingest-sources.ts` (add content)
+- Server routes: ingestion + search HTTP endpoints
+- Knowledge store: `knowledge/retail/*.md`
+
+> Extend with multi-namespace segmentation (e.g., `policies`, `loyalty`, `international`) for scoped queries.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">
+    Run <code>npm install</code> inside <code>retail-faq-knowledge-agent</code>.
+  </Step>
+  <Step title="Configure environment">
+    Copy <code>.env.example</code> to <code>.env</code> and add <code>OPENAI_API_KEY</code>.
+  </Step>
+  <Step title="Review knowledge base">
+    Inspect <code>knowledge/retail/*.md</code> (shipping, returns, account/payment).
+  </Step>
+  <Step title="Start dev server">
+    Run <code>npm run dev</code> (default port 4111 unless overridden).
+  </Step>
+  <Step title="Test search route">
+    Use curl to call <code>/api/tools/searchDocs</code> with a query (examples below).
+  </Step>
+  <Step title="Chat with agent">
+    POST to <code>/api/agents/retail-faq/generate</code> with a messages array.
+  </Step>
+  <Step title="Connect to CometChat">
+    Register with Agent ID <code>retail-faq</code> and your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - `package.json`, `tsconfig.json`, `.env.example`
+- Knowledge
+  - `knowledge/retail/*.md`
+- Mastra setup
+  - `src/mastra/index.ts`
+  - `src/mastra/server/routes.ts`
+  - `src/mastra/server/routes/routes/searchDocs.ts`
+  - `src/mastra/server/routes/routes/ingest.ts`
+  - `src/mastra/server/util/safeErrorMessage.ts`
+- Agents & Tools
+  - `src/mastra/agents/retail-faq-agent.ts`
+  - `src/mastra/tools/docs-retriever.ts`
+  - `src/mastra/tools/ingest-sources.ts`
+
+***
+
+## Step 1 – Create / Verify the Agent
+
+Ensure the agent file defines:
+- Name key: <code>retail-faq</code> → endpoint `/api/agents/retail-faq/generate`.
+- Instructions emphasizing: cite retrieved facts, ask clarifying questions, avoid ungrounded claims.
+- Retrieval usage: call search tool before answering unless answer is trivial.
+
+***
+
+## Step 2 – Retrieval & Ingestion Tools
+
+| Tool | Purpose | Inputs | Output |
+|------|---------|--------|--------|
+| ingestSources | Add documents (URLs / file paths / raw text) | sources[], namespace | ingestion status + counts |
+| searchDocs | Retrieve relevant chunks | query, namespace, maxResults | ranked list of chunks |
+
+> Namespace strategy: use separate namespaces per brand, region, or vertical to isolate domain context.
+
+***
+
+## Step 3 – Run & Test Locally
+
+<Steps>
+  <Step title="Start"><code>npm run dev</code></Step>
+  <Step title="Query shipping">Ask about delivery times.</Step>
+  <Step title="Query returns">Ask return window / process.</Step>
+  <Step title="Ingest new doc">Add a policy URL then query it.</Step>
+</Steps>
+
+Chat example:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/retail-faq/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"What is your return policy?"}]}'
+```
+
+Search example:
+```bash
+curl -s -X POST http://localhost:4111/api/tools/searchDocs \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"return policy","namespace":"retail","maxResults":5}'
+```
+
+Ingest example:
+```bash
+curl -s -X POST http://localhost:4111/api/tools/ingestSources \
+  -H 'Content-Type: application/json' \
+  -d '{"sources":["https://example.com/help/loyalty"],"namespace":"retail"}'
+```
+
+***
+
+## Expected Answer Pattern
+
+Grounded answer (no hallucinations):
+1. Summarize the policy
+2. Provide key numbers (days, fees) if present in retrieved chunks
+3. Encourage follow-up clarification if ambiguous
+
+> If retrieval yields zero results: ask user to rephrase OR offer to ingest new content.
+
+***
+
+## CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Register Agent">Provider=Mastra, Agent ID=<code>retail-faq</code>, Deployment URL=<code>https://your-domain/api/agents/retail-faq/generate</code>.</Step>
+  <Step title="Enable">Save & toggle <b>Enabled</b>.</Step>
+</Steps>
+
+***
+
+## Customize in Chat Builder
+
+<Steps>
+  <Step title="Select Variant">Open the registered agent variant.</Step>
+  <Step title="Branding">Configure theme & avatar.</Step>
+  <Step title="Answer Style">Adjust prompt for tone (concise, empathetic, formal).</Step>
+  <Step title="Preview">Ask shipping / returns / payments queries.</Step>
+</Steps>
+
+***
+
+## Integration Options
+
+<CardGroup>
+  <Card title="No Code Widget" description="Embed via script" href="/widget/ai-agents" />
+  <Card title="React UI Kit" description="Prebuilt FAQ chat components" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" />
+  <Card title="Headless API" description="Call endpoints directly" href="#api" />
+</CardGroup>
+
+***
+
+## Test Matrix
+
+<Steps>
+  <Step title="Shipping ETA">"How long does delivery take?"</Step>
+  <Step title="Return Window">"Can I return after 35 days?" (Should clarify or deny)</Step>
+  <Step title="Payment Methods">"Do you take PayPal?"</Step>
+  <Step title="Exchange Process">"How do I exchange a size?"</Step>
+  <Step title="Unknown Query">"What are your franchise fees?" (Should request ingestion / clarify)</Step>
+</Steps>
+
+***
+
+## Content Governance Checklist
+
+- Keep versioned knowledge sources (Git or CMS)
+- Re-ingest after major policy changes
+- Expire outdated chunks (add metadata in future)
+- Monitor zero-result queries → content backlog
+- Avoid embedding sensitive PII
+
+***
+
+## Security & Production Checklist
+
+- Validate ingestion URLs (whitelist domains)
+- Limit max file size & request body
+- Enforce auth on ingestion routes (API key / JWT)
+- Rate limit search & generate endpoints
+- Log retrieval context IDs (not full raw text in high-compliance environments)
+- Cache frequent queries to reduce token costs
+
+***
+
+## Troubleshooting
+
+| Issue | Likely Cause | Resolution |
+|-------|--------------|-----------|
+| Empty retrieval results | Namespace mismatch | Use correct namespace (default: retail) |
+| Hallucinated answer | Skipped search step | Re-emphasize retrieval in agent instructions |
+| Slow responses | Large ingestion / no caching | Enable batching & caching layer |
+| Ingest fails | Bad URL or format | Verify URL returns 200 / supported MIME |
+| Duplicate content | Re-ingested same source | Implement source hash & skip duplicates |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""    # Required OpenAI key
+PORT=4111             # Optional server port
+```
+
+***
+
+## Extend This Example
+
+<CardGroup>
+  <Card title="Citations" description="Append inline source references in answers." />
+  <Card title="Multi-Namespace" description="Segment policies vs marketing vs support." />
+  <Card title="Feedback Loop" description="Capture thumbs-up/down to improve content." />
+</CardGroup>
+
+***
+
+## Next Steps
+
+<Steps>
+  <Step title="Add Namespaces">Introduce `loyalty` & `international` segments.</Step>
+  <Step title="Citations Layer">Return source IDs for UI highlighting.</Step>
+  <Step title="Embeddings Store">Swap to persistent vector DB.</Step>
+  <Step title="Analytics">Track search → answer success ratio.</Step>
+</Steps>
+
+> Your Retail FAQ Knowledge Agent is now live. Keep iterating: curate content, monitor gaps, and refine retrieval instructions for higher precision.
