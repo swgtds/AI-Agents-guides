@@ -26,6 +26,15 @@
           "education/group-project-coordinator-agent",
           "education/study-group-chat-agent"
         ]
+      },
+      {
+        "group": "E-commerce",
+        "expanded": false,
+        "pages": [
+          "ecommerce/shopping-assistant-frontend-actions-agent",
+          "ecommerce/trigger-refunds-and-update-orders",
+          "ecommerce/customer-escalations-handoff-agent"
+        ]
       }
     ]
   }

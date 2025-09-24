@@ -1,0 +1,284 @@
+# Build Your Refunds & Order Management Workflow Agent with Mastra
+
+> Create a Mastra agent that manages e‑commerce orders: retrieve details, validate and update statuses, process full or partial refunds, and surface clear business rule feedback — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agent**: `refundsOrdersAgent` that handles refunds, status updates, and order lookups.
+- Secure backend tools (server‑side only):
+  - `get-order` – retrieve single / filtered orders
+  - `process-refund` – full & partial refunds with validation
+  - `update-order-status` – enforce transition rules & optional notes
+- An agent chat endpoint: `/api/agents/refundsOrdersAgent/generate`
+- Integratable with **CometChat AI Agents** for real‑time customer support or internal ops.
+
+***
+
+## Prerequisites
+
+- Node.js 20.9+ (project uses ESM + modern TS target)
+- Existing Mastra project (or this example)
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app for deployment
+
+***
+
+## Quick Links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/README.md)
+- **Agent Source**: [src/mastra/agents/refunds-orders-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/agents/refunds-orders-agent.ts)
+- **Tools Index**: [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/index.ts)
+- **Mastra Config**: [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/index.ts)
+- **Environment Variables**: See README → Environment Variables
+
+***
+
+## How it Works
+
+This example implements a transactional Order & Refund Management Agent that:
+
+- Uses structured tools to operate on an in‑memory sample orders dataset.
+- Validates refund eligibility (prevents double / invalid refunds & over‑amount partials).
+- Enforces status transition constraints (e.g., can't move refunded→shipped, completed→processing).
+- Returns rich, structured outputs (amounts, prior status, validation messages) to ground responses.
+- Provides concise, user‑oriented explanations of each action or error.
+
+Key components:
+- Agent: [src/mastra/agents/refunds-orders-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/agents/refunds-orders-agent.ts)
+- Tools:
+  - [get-order-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/get-order-tool.ts)
+  - [process-refund-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/process-refund-tool.ts)
+  - [update-order-status-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/update-order-status-tool.ts)
+- Mastra root: [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/index.ts)
+  
+> Replace the in‑memory order arrays with real persistence (DB/ORM) for production.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install & configure">
+    Run <code>npm install</code> then create <code>.env</code> with <code>OPENAI_API_KEY</code>.
+  </Step>
+  <Step title="Review tools">
+    Examine schema & business logic in <code>src/mastra/tools/*.ts</code> and adjust rules (statuses, transitions, refund limits) as needed.
+  </Step>
+  <Step title="Start dev server">
+    Run <code>npm run dev</code> to launch the Mastra HTTP API (default port 4111).
+  </Step>
+  <Step title="Test agent">
+    Use curl (examples below) to trigger order lookups, refunds, and status changes via the agent endpoint.
+  </Step>
+  <Step title="Integrate to CometChat">
+    Register the agent (Provider=Mastra, Agent ID=<code>refundsOrdersAgent</code>) and point the Deployment URL to your public <code>/api/agents/refundsOrdersAgent/generate</code>.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files for the Refunds & Order Management Agent:
+
+- Runtime & config
+  - [package.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/package.json), [tsconfig.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/tsconfig.json), [README.md](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/README.md)
+- Mastra setup
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/index.ts)
+- Agent
+  - [src/mastra/agents/refunds-orders-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/agents/refunds-orders-agent.ts)
+- Tools
+  - [src/mastra/tools/get-order-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/get-order-tool.ts)
+  - [src/mastra/tools/process-refund-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/process-refund-tool.ts)
+  - [src/mastra/tools/update-order-status-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/update-order-status-tool.ts)
+  - [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/trigger-refunds-and-update-orders/src/mastra/tools/index.ts)
+
+***
+
+## Step 1 – The Agent
+
+`refundsOrdersAgent` is configured with:
+
+- Clear instructions covering: refund processing, status changes, order retrieval.
+- Tool grounding: always calls the appropriate tool before asserting facts.
+- Business rule messaging: explains invalid transitions or refund denials.
+
+> Adjust tone, escalation policy, or security disclaimers inside `refunds-orders-agent.ts` as required.
+
+***
+
+## Step 2 – Tools Overview
+
+| Tool | Purpose | Key Validation |
+|------|---------|----------------|
+| `get-order` | Fetch single or filtered order list | Status & ID filtering |
+| `process-refund` | Full / partial refund | Rejects over-amount & already refunded/cancelled |
+| `update-order-status` | Transition order state | Blocks invalid transitions (refunded → active, etc.) |
+
+All tools use Zod schemas for strict input/output typing — enabling deterministic, structured responses.
+
+***
+
+## Step 3 – Run Locally
+
+<Steps>
+  <Step title="Dependency install">
+    <code>npm install</code>
+  </Step>
+  <Step title="Start server">
+    <code>npm run dev</code>
+  </Step>
+  <Step title="Query agent">
+    POST to <code>/api/agents/refundsOrdersAgent/generate</code> with a messages array.
+  </Step>
+</Steps>
+
+Example (order info):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Show me details for order ORD-001"}]}'
+```
+
+***
+
+## Sample curl Commands
+
+Lookup specific order:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Show me order ORD-002"}]}'
+```
+
+List completed orders:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"List all completed orders"}]}'
+```
+
+Full refund:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Process a refund for order ORD-002"}]}'
+```
+
+Partial refund:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Refund $50 from order ORD-004 due to damaged item"}]}'
+```
+
+Update status:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Update order ORD-003 status to delivered"}]}'
+```
+
+Invalid amount example:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/refundsOrdersAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Refund $1000 from order ORD-003"}]}'
+```
+
+***
+
+## Business Rules
+
+### Refunds
+- Cannot refund orders in `cancelled` or `refunded` states.
+- Partial refund must be > 0 and ≤ order total.
+- Full refund sets status → `refunded`.
+
+### Status Transitions (examples)
+- Disallow moving `refunded` → any active state.
+- Disallow `cancelled` → shipped/delivered/completed.
+- Disallow reversing `completed` back to `pending` / `processing`.
+
+Adapt these in `update-order-status-tool.ts` (`invalidTransitions`).
+
+***
+
+## Extend This Example
+
+<CardGroup>
+  <Card title="Persist Orders" href="#" description="Replace arrays with DB (Postgres/Prisma)." />
+  <Card title="Auth & RBAC" href="#" description="Restrict refund/status ops by role." />
+  <Card title="Multi-Channel" href="#" description="Expose same agent via internal dashboard." />
+</CardGroup>
+
+***
+
+## CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Register">Provider=Mastra, Agent ID=<code>refundsOrdersAgent</code>, Deployment URL=<code>https://your-domain/api/agents/refundsOrdersAgent/generate</code>.</Step>
+  <Step title="Enable">Save & ensure toggle shows <b>Enabled</b>.</Step>
+</Steps>
+
+You can now chat with the agent inside any configured conversation. Tool calls stay server‑side; only grounded results surface.
+
+***
+
+## Security & Production Checklist
+
+- Add authentication (API key/JWT) to agent endpoint.
+- Enforce rate limiting on refund & status operations.
+- Centralize logging & audit trails for financial changes.
+- Validate & sanitize all tool inputs (already started with Zod).
+- Do not expose internal order IDs if sensitive — map to external tokens.
+- Implement idempotency for refund actions (e.g., hash of request body).
+
+***
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Order not found | Wrong ID | Validate prefix & existence before calling tool |
+| Refund denied | Invalid status | Check current status via `get-order` first |
+| Status update rejected | Disallowed transition | Review `invalidTransitions` mapping |
+| Tool not invoked | Model instruction drift | Re-emphasize tool usage in agent instructions |
+| Empty response | Missing OPENAI_API_KEY | Confirm `.env` loaded & server restart |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required: OpenAI API key
+PORT=4111            # Optional: Mastra server port (defaults if omitted)
+```
+
+***
+
+## Next Steps
+
+<Steps>
+  <Step title="Swap storage">Introduce a repository layer & connect a real database.</Step>
+  <Step title="Add payments">Integrate actual payment/refund provider webhooks.</Step>
+  <Step title="Add notifications">Emit email / webhook events on refund or status change.</Step>
+  <Step title="Analytics">Aggregate refund frequency, amounts, turnaround time.</Step>
+</Steps>
+
+***
+
+## Full Test Flow
+
+<Steps>
+  <Step title="Lookup">Fetch order state (e.g., ORD-002).</Step>
+  <Step title="Partial refund">Process a bounded refund; order retains prior status.</Step>
+  <Step title="Full refund">Issue remaining amount → status becomes refunded.</Step>
+  <Step title="Invalid transition">Attempt disallowed status update to confirm safeguards.</Step>
+</Steps>
+
+> Your Refunds & Order Management Agent is now operational. Harden, extend, and integrate it into your broader commerce platform.

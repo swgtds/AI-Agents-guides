@@ -1,0 +1,328 @@
+# Build Your Customer Escalations Handoff Workflow Agent with Mastra
+
+> Create a Mastra agent that triages customer issues, classifies urgency, and routes them intelligently across Tier 1, Tier 2, Supervisor, or Human Representative — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Escalation coordinator agent**: `customerEscalationAgent` that analyzes issue text + metadata.
+- A **routing tool** (`customerEscalation`) applying keyword, urgency, tier, and history logic.
+- (Optional) Supporting specialized agents (Tier 1 / Tier 2 / Supervisor / Human) encapsulated as helper handlers.
+- A workflow (`customerEscalationWorkflow`) for structured escalation handling.
+- A single chat endpoint: `/api/agents/customerEscalationAgent/generate` for integration with **CometChat**.
+
+***
+
+## Prerequisites
+
+- Node.js 20+.
+- Mastra project (this folder or fresh: `npx create-mastra@latest my-escalations-app`).
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- (Optional) CometChat app for deployment.
+
+***
+
+## Quick Links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/README.md)
+- **Agent Config**: [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/index.ts)
+- **Routing Tool**: [src/mastra/tools/customer-escalation-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/tools/customer-escalation-tool.ts)
+- **Workflow**: [src/mastra/workflows/customer-escalation-workflow.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/workflows/customer-escalation-workflow.ts)
+- **Support Level Helpers**: [src/mastra/agents/*](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/agents/)
+
+***
+
+## How It Works
+
+This escalation workflow:
+
+- Parses issue text + urgency + customer type + previous escalations.
+- Matches against keyword buckets (critical / complex / basic) & rules.
+- Determines target: `tier1`, `tier2`, `supervisor`, or `human`.
+- Returns structured ticket metadata: IDs, ETA, next steps, escalation flag.
+- Appends formatted routing summary (e.g., `([tier2] | urgency: medium | escalated: yes/no)`).
+- Uses local LibSQL storage (can be swapped for remote DB) & Mastra workflow registration.
+
+Key components:
+- Agent: initialization + instructions in `src/mastra/index.ts`.
+- Tool: `customerEscalation` (core decision logic) in `customer-escalation-tool.ts`.
+- Workflow: optional structured orchestration for future async steps.
+- Helpers: Tier-specific handlers (generate ticket objects, resolution times).
+
+> Extend by persisting tickets, adding CRM enrichment, or plugging into incident management systems.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">
+    Run <code>npm install</code> inside <code>customer-escalations-handoff-agent</code>.
+  </Step>
+  <Step title="Configure env">
+    Create <code>.env</code> with <code>OPENAI_API_KEY</code>. (Add <code>PORT</code> if overriding default.)
+  </Step>
+  <Step title="Review logic">
+    Inspect <code>customer-escalation-tool.ts</code> for keyword arrays & routing rules. Adjust to your business domain.
+  </Step>
+  <Step title="Start dev server">
+    Run <code>npm run dev</code>. Mastra serves APIs (default: 4111).
+  </Step>
+  <Step title="Test escalation">
+    Use curl examples below to verify each routing path (Tier 1 → Human).
+  </Step>
+  <Step title="Connect CometChat">
+    Register agent (Provider=Mastra, Agent ID=<code>customerEscalationAgent</code>) with public endpoint URL.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime
+  - [package.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/package.json), [tsconfig.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/tsconfig.json), [.gitignore](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/.gitignore)
+- Mastra Core
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/index.ts) (agent + workflow registration)
+- Tooling
+  - [src/mastra/tools/customer-escalation-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/tools/customer-escalation-tool.ts)
+- Workflow
+  - [src/mastra/workflows/customer-escalation-workflow.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/workflows/customer-escalation-workflow.ts)
+- Support Helpers
+  - [src/mastra/agents/tier1-support-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/agents/tier1-support-agent.ts)
+  - [src/mastra/agents/tier2-support-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/agents/tier2-support-agent.ts)
+  - [src/mastra/agents/supervisor-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/agents/supervisor-agent.ts)
+  - [src/mastra/agents/human-rep-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/src/mastra/agents/human-rep-agent.ts)
+- Test Script
+  - [test-agent.js](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/customer-escalations-handoff-agent/test-agent.js) (direct tool execution scenarios)
+
+***
+
+## Step 1 – Define the Agent
+
+The root agent (`customerEscalationAgent`) supplies:
+
+- Instruction set covering severity assessment, routing, empathy, summary suffix.
+- Access to `customerEscalation` tool.
+- Model: GPT-4 (adjust as needed for throughput/cost).
+
+> Ensure response endings keep the pattern: <code>([routedTo] | urgency: [urgencyLevel] | escalated: yes/no)</code> for downstream UI parsing.
+
+***
+
+## Step 2 – Routing Tool Essentials
+
+| Element | Purpose |
+|---------|---------|
+| Keyword groups | Identify critical vs complex vs basic patterns |
+| Urgency + customer type | Elevate VIP / premium / critical cases |
+| Previous escalations | Force supervisor escalation after thresholds |
+| Structured ticket | Provide consistent metadata (IDs, ETAs, steps) |
+| Escalation flag | Indicates workflow handoff / alert triggers |
+
+Modify arrays in `customer-escalation-tool.ts` to customize domain triggers.
+
+***
+
+## Step 3 – Run & Test
+
+<Steps>
+  <Step title="Start"><code>npm run dev</code></Step>
+  <Step title="Basic issue">Route order tracking to Tier 1.</Step>
+  <Step title="Complex issue">Refund/billing → Tier 2.</Step>
+  <Step title="Persistent complaint">Multiple escalations → Supervisor.</Step>
+  <Step title="Sensitive critical">Fraud/security → Human or Supervisor.</Step>
+</Steps>
+
+Example (complex refund):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"I want a refund for my damaged item"}]}'
+```
+
+***
+
+## Sample curl Commands
+
+Tier 1 (basic):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Where is my order? Tracking ABC123"}]}'
+```
+
+Tier 2 (complex):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Billing dispute on last invoice"}]}'
+```
+
+Supervisor (escalated):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Third complaint about unresolved return process"}]}'
+```
+
+Human (critical):
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"There is fraudulent activity on my account"}]}'
+```
+
+VIP fast path:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/customerEscalationAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"As a VIP I have a serious shipping problem"}]}'
+```
+
+***
+
+## Expected Response Shape
+
+```json
+{
+  "response": "Thank you for bringing this to our attention... ([tier2] | urgency: medium | escalated: yes)",
+  "routedTo": "tier2",
+  "urgencyLevel": "medium",
+  "escalated": true,
+  "ticketDetails": {
+    "ticketId": "T2-1730000000000",
+    "supportLevel": "tier2",
+    "status": "in-progress",
+    "estimatedResolutionTime": "1-3 business days",
+    "nextSteps": ["Issue escalated to Tier 2 specialist", "Detailed investigation initiated"],
+    "requiresFollowUp": true
+  }
+}
+```
+
+***
+
+## CometChat Integration
+
+<Steps>
+  <Step title="Open Dashboard">Visit <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Register">Provider=Mastra, Agent ID=<code>customerEscalationAgent</code>, Deployment URL=<code>https://your-domain/api/agents/customerEscalationAgent/generate</code>.</Step>
+  <Step title="Enable">Save & ensure toggle is <b>Enabled</b>.</Step>
+</Steps>
+
+***
+
+## Customize in Chat Builder
+
+<Steps>
+  <Step title="Select Variant">Open the registered agent variant.</Step>
+  <Step title="Configure Tone">Adjust system prompt for empathy level & compliance disclaimers.</Step>
+  <Step title="Add Workflow Hooks">Display escalation badges using final summary suffix.</Step>
+  <Step title="Preview">Simulate multiple escalation paths.</Step>
+</Steps>
+
+***
+
+## Integration Options
+
+<CardGroup>
+  <Card title="Widget" description="Embed support escalation chat" href="/widget/ai-agents" />
+  <Card title="React UI Kit" description="Prebuilt conversation components" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" />
+  <Card title="Headless API" description="Direct HTTP integration" href="#api" />
+</CardGroup>
+
+***
+
+## Test Matrix
+
+<Steps>
+  <Step title="Basic Query">Low urgency tracking question → Tier 1.</Step>
+  <Step title="Complex Billing">Refund / dispute → Tier 2.</Step>
+  <Step title="Repeat Escalation">3rd complaint → Supervisor.</Step>
+  <Step title="Critical Fraud">Immediate human escalation.</Step>
+  <Step title="VIP High Urgency">VIP + high urgency → Human.</Step>
+</Steps>
+
+***
+
+## Business Rules Summary
+
+| Scenario | Route |
+|----------|-------|
+| Critical keyword / urgency critical | supervisor or human (VIP → human) |
+| Complex keyword / high urgency | tier2 (or supervisor if repeated) |
+| Previous escalations > 2 | supervisor |
+| VIP + high/critical | human |
+| Premium (medium) | tier2 |
+| Basic + low | tier1 |
+
+> Tune arrays & thresholds inside the tool for finer control.
+
+***
+
+## Security & Production Checklist
+
+- Authenticate agent endpoint (JWT / API key) before production exposure.
+- Rate limit escalation submissions (prevent automated abuse).
+- Persist tickets & escalation history in durable store (replace local file DB).
+- Log routing decisions (include hashed user/session identifiers only).
+- Add PII scrubbing before storing raw issue text if sensitive.
+- Monitor anomaly patterns (sudden spike in critical classifications).
+
+***
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Always tier2 | Over-broad complex keywords | Narrow keyword set / add negative filters |
+| Supervisor overused | Escalation threshold too low | Increase previousEscalations cutoff |
+| Missing summary suffix | Prompt drift | Reassert format in agent instructions |
+| VIP not prioritized | customerType not supplied | Ensure frontend passes metadata |
+| Urgency misclassified | Vague user text | Prompt user for urgency clarification step |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required: OpenAI key
+PORT=4111            # Optional: server port
+```
+
+***
+
+## Extend This Example
+
+<CardGroup>
+  <Card title="Sentiment Analysis" description="Augment routing with emotional intensity scoring." />
+  <Card title="CRM Enrichment" description="Fetch purchase history to weight prioritization." />
+  <Card title="Multi-Language" description="Add translation layer before routing." />
+</CardGroup>
+
+***
+
+## Next Steps
+
+<Steps>
+  <Step title="Persist Tickets">Swap LibSQL file path with hosted DB.</Step>
+  <Step title="Add Notifications">Trigger email / webhook on supervisor escalation.</Step>
+  <Step title="Analytics">Dashboard for routing distribution & MTTR.</Step>
+  <Step title="Human Handoff UI">Embed agent/human transcript continuity.</Step>
+</Steps>
+
+***
+
+## Full Test Flow
+
+<Steps>
+  <Step title="Baseline">Track order → Tier 1 immediate resolution.</Step>
+  <Step title="Complex">Billing dispute escalates to Tier 2 with ETA.</Step>
+  <Step title="Repeat">Third follow-up re-routes to Supervisor.</Step>
+  <Step title="Critical Fraud">Direct Human escalation with priority flag.</Step>
+</Steps>
+
+> Your Customer Escalations Handoff Workflow Agent is live. Iterate on prompts, refine routing matrices, and connect to real ticketing backends for production resilience.

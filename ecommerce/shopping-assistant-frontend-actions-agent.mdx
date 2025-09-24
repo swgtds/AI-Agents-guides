@@ -1,0 +1,295 @@
+# Build Your Shopping Assistant Frontend Actions Agent with Mastra
+
+> Create a Mastra agent that enhances e‑commerce conversations: recommends products, adds items to cart, applies promo codes, and returns structured frontend action payloads — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Mastra agent**: `shoppingAssistantAgent` for conversational shopping & actionable tool calls.
+- Frontend action tools (no server mutations here):
+  - `add-to-cart` – structured cart insertion payload
+  - `apply-promo-code` – discount / free shipping / BOGO logic payload
+- A chat endpoint: `/api/agents/shoppingAssistantAgent/generate` producing text + `toolCalls`.
+- Integration path for **CometChat AI Agents** or your own web app.
+
+***
+
+## Prerequisites
+
+- A Mastra project (or this example) – `npx create-mastra@latest my-mastra-app`
+- Node.js 20.9+ installed
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app for deployment
+
+***
+
+## Quick Links
+
+- **Project README**: [README.md](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/README.md)
+- **Agent**: [src/mastra/agents/shopping-assistant-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/agents/shopping-assistant-agent.ts)
+- **Tools**: [src/mastra/tools/add-to-cart-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/tools/add-to-cart-tool.ts), [src/mastra/tools/apply-promo-code-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/tools/apply-promo-code-tool.ts)
+- **Mastra Config**: [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/index.ts)
+- **Environment variables**: README → Environment
+
+***
+
+## How it works
+
+This example implements a frontend‑action oriented Shopping Assistant that:
+
+- Interprets user purchase & discount intent, then invokes tool schemas for deterministic UI actions.
+- Returns structured tool results (e.g., `{ action: 'ADD_TO_CART', ... }`) alongside natural language.
+- Normalizes promo codes and applies business constraints (length, discount type, min order value, max discount caps, product scope).
+- Defers actual cart mutation & pricing to the frontend / commerce backend — keeping the agent stateless.
+
+Key components:
+- Agent: `shopping-assistant-agent.ts`
+- Tools: `add-to-cart-tool.ts`, `apply-promo-code-tool.ts`
+- Mastra root: `index.ts`
+
+> Production setups should validate tool outputs server‑side before applying sensitive mutations (inventory, pricing, fraud controls).
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and create a <code>.env</code> with <code>OPENAI_API_KEY</code>.
+  </Step>
+  <Step title="Review tools">
+    Inspect <code>add-to-cart-tool.ts</code> & <code>apply-promo-code-tool.ts</code>; adjust discount types, validation, or variant attributes as needed.
+  </Step>
+  <Step title="Start dev">
+    Run <code>npm run dev</code> (default Mastra dev server on port 4111).
+  </Step>
+  <Step title="Test locally">
+    Use curl (examples below) to trigger tool calls. Verify <code>toolCalls[].result.action</code> payloads.
+  </Step>
+  <Step title="Integrate UI">
+    In your frontend, listen for tool results and execute corresponding cart / pricing updates.
+  </Step>
+  <Step title="Connect to CometChat">
+    Register agent (Provider=Mastra, Agent ID=<code>shoppingAssistantAgent</code>) and supply public <code>/api/agents/shoppingAssistantAgent/generate</code> URL.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - [package.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/package.json), [tsconfig.json](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/tsconfig.json), [README.md](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/README.md)
+- Mastra setup
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/index.ts)
+- Agent
+  - [src/mastra/agents/shopping-assistant-agent.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/agents/shopping-assistant-agent.ts)
+- Tools
+  - [src/mastra/tools/add-to-cart-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/tools/add-to-cart-tool.ts)
+  - [src/mastra/tools/apply-promo-code-tool.ts](https://github.com/swagata-cometchat/ecommerce-AI-Agent/blob/main/shopping-assistant-frontend-actions-agent/src/mastra/tools/apply-promo-code-tool.ts)
+
+***
+
+## Step 1 – Create / Adjust the Agent
+
+Ensure the agent:
+
+- Name key registered as <code>shoppingAssistantAgent</code> → endpoint path `/api/agents/shoppingAssistantAgent/generate`.
+- Instructions clarify when to invoke each tool (only with explicit purchase / discount intent & required fields).
+- Asks for missing required data (product ID, price, promo code details) before tool invocation.
+
+***
+
+## Step 2 – Tool Design Principles
+
+| Tool | Purpose | Notable Inputs | Output Trigger |
+|------|---------|---------------|----------------|
+| add-to-cart | Add item request payload | productId, productName, price, quantity, variant | action = ADD_TO_CART |
+| apply-promo-code | Discount/promo payload | promoCode, discountType, discountValue | action = APPLY_PROMO_CODE |
+
+Both tools:
+- Emit a timestamp for client-side ordering.
+- Are stateless; they do not mutate inventory or persistent cart data.
+
+***
+
+## Step 3 – Run & Test Locally
+
+<Steps>
+  <Step title="Install"><code>npm install</code></Step>
+  <Step title="Start server"><code>npm run dev</code></Step>
+  <Step title="Invoke agent">POST to <code>/api/agents/shoppingAssistantAgent/generate</code></Step>
+</Steps>
+
+Add to cart example:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/shoppingAssistantAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Add iPhone 15 Pro to cart for $999, id iphone-15-pro"}]}'
+```
+
+Apply promo code example:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/shoppingAssistantAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Apply promo code SAVE20 for 20% off"}]}'
+```
+
+Variant + quantity:
+```bash
+curl -s -X POST http://localhost:4111/api/agents/shoppingAssistantAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Add 2 large blue performance tees (id perf-tee-lb) at $29.99 each"}]}'
+```
+
+***
+
+## Example Response Shape
+
+```json
+{
+  "text": "Added iPhone 15 Pro to your cart.",
+  "toolCalls": [
+    {
+      "toolName": "addToCartTool",
+      "result": {
+        "action": "ADD_TO_CART",
+        "productId": "iphone-15-pro",
+        "productName": "iPhone 15 Pro",
+        "price": 999,
+        "currency": "USD",
+        "quantity": 1,
+        "timestamp": "2025-09-24T12:00:00.000Z"
+      }
+    }
+  ]
+}
+```
+
+***
+
+## Frontend Action Handling
+
+```ts
+function handleAgentResponse(res) {
+  res.toolCalls?.forEach(tc => {
+    switch (tc.result.action) {
+      case 'ADD_TO_CART':
+        cartStore.add({
+          id: tc.result.productId,
+          name: tc.result.productName,
+          price: tc.result.price,
+          qty: tc.result.quantity,
+          variant: tc.result.variant,
+        });
+        if (tc.result.showNotification) ui.toast(`${tc.result.productName} added`);
+        break;
+      case 'APPLY_PROMO_CODE':
+        pricing.applyPromo({ code: tc.result.promoCode, ...tc.result });
+        if (tc.result.showSuccessAnimation) ui.animateDiscount();
+        break;
+    }
+  });
+}
+```
+
+> Always re‑validate pricing & discount rules server‑side before final checkout.
+
+***
+
+## CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Register Agent">Provider=Mastra, Agent ID=<code>shoppingAssistantAgent</code>, Deployment URL=<code>https://your-domain/api/agents/shoppingAssistantAgent/generate</code>.</Step>
+  <Step title="Enable">Save & ensure the agent is toggled <b>Enabled</b>.</Step>
+</Steps>
+
+***
+
+## Customize in Chat Builder
+
+<Steps>
+  <Step title="Select Variant">Open the registered AI Agent variant.</Step>
+  <Step title="Branding">Configure theme, colors, avatar.</Step>
+  <Step title="Behavior Tweaks">Adjust system prompt (tone, upsell policy, disclaimers).</Step>
+  <Step title="Preview">Verify tool call payloads display as expected.</Step>
+</Steps>
+
+***
+
+## Integration Options
+
+<CardGroup>
+  <Card title="No Code Widget" description="Embed via script" href="/widget/ai-agents" />
+  <Card title="React UI Kit" description="Prebuilt chat & action events" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" />
+  <Card title="Headless API" description="Direct HTTP integration" href="#api" />
+</CardGroup>
+
+***
+
+## Test Matrix
+
+<Steps>
+  <Step title="Simple Cart Add">Single product with minimal fields.</Step>
+  <Step title="Variant Add">Product with size/color variant.</Step>
+  <Step title="Promo Code %">Percentage discount path.</Step>
+  <Step title="Promo Code Fixed">Fixed amount path plus max cap.</Step>
+  <Step title="Invalid Promo">Too short / expired scenarios (agent should request clarification).</Step>
+</Steps>
+
+***
+
+## Security & Production Checklist
+
+- Validate cart mutations server-side; never trust raw model output.
+- Recalculate discounts with canonical pricing service (avoid client tampering).
+- Enforce rate limits on agent endpoint.
+- Strip / log tool payloads for analytics (PII safe handling).
+- Monitor token usage + add fallbacks for model timeouts.
+
+***
+
+## Troubleshooting
+
+| Issue | Likely Cause | Resolution |
+|-------|--------------|------------|
+| No tool call for add request | Insufficient product detail | Ask user for productId, price, or name; refine prompt instructions |
+| Promo not applied | Missing discount type/value | Provide discount type (percentage/fixed) & value or let agent infer | 
+| Tool schema mismatch | Outdated frontend parser | Sync schema fields (variant, animation flags) |
+| Empty response | Missing OPENAI_API_KEY | Add to `.env` & restart dev server |
+| Unexpected currency | Default applied | Supply currency in user request or extend tool for regional inference |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required: OpenAI API key
+PORT=4111            # Optional: Mastra server port
+```
+
+***
+
+## Extend This Example
+
+<CardGroup>
+  <Card title="Inventory Checks" description="Add server tool verifying stock before add." />
+  <Card title="Personalization" description="Inject user profile embeddings for tailored recs." />
+  <Card title="Analytics" description="Track add-to-cart & promo usage KPIs." />
+</CardGroup>
+
+***
+
+## Next Steps
+
+<Steps>
+  <Step title="Backend Validation">Introduce a server webhook to confirm tool outputs.</Step>
+  <Step title="Promotion Engine">Integrate pricing / promotion microservice.</Step>
+  <Step title="Session Memory">Persist recent viewed items for better recs.</Step>
+  <Step title="A/B Experiments">Test prompting strategies for conversion uplift.</Step>
+</Steps>
+
+> Your Shopping Assistant Frontend Actions Agent is now live. Iterate on prompts, enrich product metadata, and layer real pricing logic for production readiness.
