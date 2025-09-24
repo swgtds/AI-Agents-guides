@@ -33,7 +33,8 @@
         "pages": [
           "ecommerce/shopping-assistant-frontend-actions-agent",
           "ecommerce/trigger-refunds-and-update-orders",
-          "ecommerce/customer-escalations-handoff-agent"
+          "ecommerce/customer-escalations-handoff-agent",
+          "ecommerce/retail-faq-knowledge-agent"
         ]
       }
     ]
