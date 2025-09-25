@@ -36,6 +36,16 @@
           "ecommerce/customer-escalations-handoff-agent",
           "ecommerce/retail-faq-knowledge-agent"
         ]
+      },
+      {
+        "group": "Finance",
+        "expanded": false,
+        "pages": [
+          "finance/automate-account-statements",
+          "finance/kyc-compliance-agent",
+          "finance/loan-policies-and-features",
+          "finance/managing-loan-approvals"
+        ]
       }
     ]
   }
