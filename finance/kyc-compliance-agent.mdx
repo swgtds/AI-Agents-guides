@@ -25,9 +25,10 @@
 
 ## Quick links
 
-- Project README: `kyc-compliance-agent/README.md`
-- Swagger UI (local): http://localhost:4111/docs
-- Environment variables: see README → Environment Variables
+- Project README: [kyc-compliance-agent/README.md](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/kyc-compliance-agent/README.md)
+- Swagger UI (local): [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)
+- Agents: [src/mastra/agents/compliance-agent.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/agents/compliance-agent.ts)
+- Environment variables: see [README](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/kyc-compliance-agent/README.md) → Environment Variables
 
 ***
 
@@ -84,19 +85,19 @@ Key components:
 Core files for the KYC / AML Workflow Agent:
 
 - Runtime & config
-  - `package.json`, `tsconfig.json`, `README.md`
+  - [package.json](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/package.json), [tsconfig.json](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/tsconfig.json), [README.md](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/kyc-compliance-agent/README.md)
 - Agents
-  - `src/mastra/agents/compliance-agent.ts`
+  - [src/mastra/agents/compliance-agent.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/agents/compliance-agent.ts)
 - Tools
-  - `src/mastra/tools/compliance-tools.ts`
-  - `src/mastra/tools/index.ts`
+  - [src/mastra/tools/compliance-tools.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/tools/compliance-tools.ts)
+  - [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/tools/index.ts)
 - Server
-  - `src/mastra/index.ts`
-  - `src/mastra/server/routes.ts`
-  - `src/mastra/server/routes/compliance.ts`
-  - `src/mastra/server/util/safeErrorMessage.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/index.ts)
+  - [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/mastra/server/routes.ts)
+  - [src/mastra/server/routes/compliance.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/kyc-compliance-agent/src/mastra/server/routes/compliance.ts)
+  - [src/mastra/server/util/safeErrorMessage.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/kyc-compliance-agent/src/mastra/server/util/safeErrorMessage.ts)
 - Types
-  - `src/types/kyc-compliance.ts`
+  - [src/types/kyc-compliance.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/src/types/kyc-compliance.ts)
 
 ***
 
@@ -266,7 +267,6 @@ curl -X POST http://localhost:4111/api/agents/kyc-compliance/generate \
 ```bash .env
 OPENAI_API_KEY=""   # Required
 PORT=4111            # Optional server port
-NODE_ENV=development
 ```
 
 ***
@@ -281,4 +281,6 @@ NODE_ENV=development
 
 ***
 
-> Demo uses mock randomness for illustration. Replace logic before production use.
+<Warning>
+Demo uses mock randomness for illustration. Replace logic before production use.
+</Warning>

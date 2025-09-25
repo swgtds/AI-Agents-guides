@@ -25,8 +25,8 @@
 
 ## Quick links
 
-- Project README: `managing-loan-approvals/README.md`
-- Swagger / API (local): http://localhost:4111/swagger-ui (if enabled) or test via curl.
+- Project README: [managing-loan-approvals/README.md](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/README.md)
+- Swagger / API (local): [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui)(if enabled) or test via curl.
 - Agent generate endpoint: `/api/agents/loanApprovalCoordinatorAgent/generate`
 - Environment variables: see README → Environment Variables
 
@@ -55,17 +55,6 @@ Key components:
 
 ***
 
-## Architecture at a Glance
-
-<CardGroup>
-  <Card title="Coordinator" description="Parses intent & delegates to specialized agent" />
-  <Card title="Specialists" description="Perform domain-specific analysis (credit, docs, risk, decision)" />
-  <Card title="Tool" description="Programmatic entrypoint for orchestration" />
-  <Card title="Workflow" description="Composable step returning structured approval context" />
-</CardGroup>
-
-***
-
 ## Setup
 
 <Steps>
@@ -82,14 +71,14 @@ Key components:
 ## Project Structure
 
 - Runtime & Config
-  - `package.json`, `tsconfig.json`, `README.md`
+  - [package.json](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/package.json), [tsconfig.json](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/tsconfig.json), [README.md](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/README.md)
 - Mastra
-  - `src/mastra/index.ts` (register agents + workflows)
-  - `src/mastra/agents/` (specialist + coordinator agents)
-  - `src/mastra/tools/loan-approval-coordinator-tool.ts`
-  - `src/mastra/workflows/loan-approval-coordinator-workflow.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/src/mastra/index.ts) (register agents + workflows)
+  - [src/mastra/agents/](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/src/mastra/agents/) (specialist + coordinator agents)
+  - [src/mastra/tools/loan-approval-coordinator-tool.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/src/mastra/tools/loan-approval-coordinator-tool.ts)
+  - [src/mastra/workflows/loan-approval-coordinator-workflow.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/src/mastra/workflows/loan-approval-coordinator-workflow.ts)
 - Entry
-  - `src/index.ts` (app bootstrap if present)
+  - [src/index.ts](https://github.com/swagata-cometchat/finance-AI-Agent/blob/main/managing-loan-approvals/src/index.ts) (app bootstrap if present)
 
 ***
 
@@ -269,4 +258,6 @@ Example footer appended by coordinator:
 
 ***
 
-> Disclaimer: This demo is illustrative only; NOT a substitute for regulated underwriting processes. Always enforce applicable financial regulations (ECOA, FCRA, TILA, RESPA, BSA/KYC).
+<Warning>
+Disclaimer: This demo is illustrative only; NOT a substitute for regulated underwriting processes. Always enforce applicable financial regulations (ECOA, FCRA, TILA, RESPA, BSA/KYC).
+</Warning>
