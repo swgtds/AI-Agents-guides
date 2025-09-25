@@ -1,0 +1,232 @@
+# Build Your Account Statements Automation Agent with Mastra
+
+> Create a Mastra agent that retrieves account details, generates multi‑format statements, tracks history, and delivers auditable financial summaries — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Account statements agent** (`accountStatementsAgent`) that automates statement generation & account data retrieval.
+- **Secure tools** for: account lookup, statement generation (PDF/CSV/JSON), and statement history queries.
+- **Single chat endpoint** for natural‑language finance operations grounded in tool calls.
+- **CometChat integration** for embedded banking support experiences.
+
+***
+
+## Prerequisites
+
+- Node.js 20.9.0+ (LTS recommended)
+- Mastra project initialized
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app for deployment
+
+***
+
+## Quick Links
+
+- README: `automate-account-statements/README.md`
+- Agent: `src/mastra/agents/account-statements-agent.ts`
+- Tools: `src/mastra/tools/` (get-account, generate-statement, get-statement-history)
+- Mastra setup: `src/mastra/index.ts`
+- Local endpoint (generate): `POST /api/agents/accountStatementsAgent/generate`
+
+***
+
+## How it Works
+
+The automation agent:
+
+- Parses user intent (lookup, list, generate, history) → invokes the appropriate tool immediately.
+- Validates account existence before statement generation.
+- Builds financial statement objects including opening/closing balances, totals, and link metadata.
+- Returns structured, explanatory responses with suggested next actions.
+- Stores (in-memory/sample) statement history retrievable by the user.
+
+Key components:
+- Agent definition with OpenAI model and registered tools.
+- Tools implementing business logic for accounts & statements.
+- Single Mastra bootstrap registering the agent.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">Run <code>npm install</code> inside <code>automate-account-statements</code>.</Step>
+  <Step title="Add environment">Create <code>.env</code> containing <code>OPENAI_API_KEY</code>.</Step>
+  <Step title="Start server">Run <code>npm run dev</code> (alias for <code>mastra dev</code>).</Step>
+  <Step title="Ping agent">Send a POST request to the generate endpoint (see examples below).</Step>
+  <Step title="Generate statements">Request PDF / CSV statements for date ranges (validating dates first).</Step>
+  <Step title="Retrieve history">Query previously generated statements to confirm tracking.</Step>
+</Steps>
+
+***
+
+## Project Structure
+
+```
+src/
+  mastra/
+    index.ts                     # Mastra bootstrap (registers agent)
+    agents/
+      account-statements-agent.ts
+    tools/
+      get-account-tool.ts
+      generate-statement-tool.ts
+      get-statement-history-tool.ts
+      index.ts
+```
+
+***
+
+## Step 1 - Agent Definition
+
+The agent (name displayed: “Account Statements Agent”, key: <code>accountStatementsAgent</code>):
+- Model: GPT‑4 (via <code>@ai-sdk/openai</code>)
+- Tools: <code>getAccountTool</code>, <code>generateStatementTool</code>, <code>getStatementHistoryTool</code>
+- Instructions enforce: immediate tool usage, validation of date ranges, clear status messaging.
+
+If you need streaming or multi-agent routing later, add them in <code>src/mastra/index.ts</code>.
+
+***
+
+## Step 2 - Tools
+
+| Tool | Purpose | Key Behaviors |
+|------|---------|---------------|
+| get-account | Retrieve account(s) & balances | Filters by ID/type/status/customer |
+| generate-statement | Produce statement (PDF/CSV/JSON) | Validates dates & account status; calculates totals |
+| get-statement-history | Retrieve past statements | Provides download links & formats |
+
+All tools return structured objects the agent explains in natural language.
+
+***
+
+## Step 3 - Run Locally
+
+<Steps>
+  <Step title="Lookup account">Request details for a specific account ID.</Step>
+  <Step title="List accounts">List by type (e.g., checking, savings, business).</Step>
+  <Step title="Generate PDF">Provide account + start/end dates.</Step>
+  <Step title="Generate CSV">Use month phrasing (tool infers range if implemented).</Step>
+  <Step title="History">Ask for statement history for an account.</Step>
+</Steps>
+
+Examples:
+```bash
+# Get account info
+curl -s -X POST http://localhost:4111/api/agents/accountStatementsAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Show me details for account ACC-001"}]}'
+
+# Generate PDF statement
+curl -s -X POST http://localhost:4111/api/agents/accountStatementsAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Generate a PDF statement for account ACC-001 from 2025-09-01 to 2025-09-30"}]}'
+
+# Statement history
+curl -s -X POST http://localhost:4111/api/agents/accountStatementsAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Show me statement history for account ACC-003"}]}'
+```
+
+***
+
+## API Endpoints
+
+- POST <code>/api/agents/accountStatementsAgent/generate</code> — Chat / operations endpoint
+
+(If you add custom REST routes later, document them here.)
+
+***
+
+## Step 4 - CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Add new agent configuration.</Step>
+  <Step title="Set fields">Provider=Mastra · Agent ID=<code>accountStatementsAgent</code>.</Step>
+  <Step title="Deployment URL">Public URL to <code>/api/agents/accountStatementsAgent/generate</code>.</Step>
+  <Step title="Enable">Save and ensure status is Enabled.</Step>
+</Steps>
+
+***
+
+## Step 5 - Business Logic Highlights
+
+<CardGroup>
+  <Card title="Validation" description="Rejects invalid date ranges (start > end)." />
+  <Card title="Formats" description="PDF · CSV · JSON output modes." />
+  <Card title="Security" description="Masked account IDs + structured history." />
+  <Card title="Extensibility" description="Add XLSX or branded templates later." />
+</CardGroup>
+
+***
+
+## Step 6 - Sample Responses (Conceptual)
+
+| Intent | Tool(s) | Output Snapshot |
+|--------|---------|-----------------|
+| “Show account ACC-002” | get-account | `{"id","customer","balance","status"}` |
+| “Generate CSV for ACC-001 Sept 2025” | generate-statement | `{"statementId","format":"csv","period","totals","downloadUrl"}` |
+| “History for ACC-003” | get-statement-history | `[ {"statementId","format","period","status"} ]` |
+
+***
+
+## Step 7 - Testing Matrix
+
+<Steps>
+  <Step title="Basic lookup">Account exists & active.</Step>
+  <Step title="Inactive generation">Expect failure w/ guidance.</Step>
+  <Step title="Invalid date order">Return validation error.</Step>
+  <Step title="Unknown account">Graceful not-found message.</Step>
+  <Step title="Repeat generation">History should include prior statement entries.</Step>
+</Steps>
+
+***
+
+## Security & Production Checklist
+
+- Add auth (JWT / API key) to generation endpoint.
+- Enforce rate limiting & request size limits.
+- Audit log: who accessed which account & when.
+- Mask / tokenize sensitive identifiers beyond last 4 digits.
+- Use signed URLs or expiring links for downloadable statements.
+- Centralize date & currency formatting (i18n ready).
+- Consider eventual persistence (Postgres + object storage) for statements.
+
+***
+
+## Troubleshooting
+
+| Issue | Likely Cause | Resolution |
+|-------|--------------|-----------|
+| “Account not found” | ID typo / test data mismatch | Re-check sample IDs in README |
+| Invalid period error | Start > End | Correct ordering (YYYY-MM-DD) |
+| Missing download link | Statement failed generation | Retry; inspect server logs |
+| Blank history | No statements yet | Generate at least one statement |
+| Slow response | Large transaction simulation | Optimize generation or paginate |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""    # Required
+PORT=4111             # Optional server port override
+```
+
+***
+
+## Extensions & Ideas
+
+- Add XLSX export (e.g., <code>exceljs</code>)
+- Scheduled monthly runs (cron / queue)
+- Email delivery integration (SES, Postmark)
+- Multi-currency FX conversions & aggregated dashboards
+- Statement signing / hash integrity verification
+- Customer portal with historical analytics
+
+***
+
+> Disclaimer: Example data is synthetic. Do not use this demo logic for production financial reporting without compliance reviews.

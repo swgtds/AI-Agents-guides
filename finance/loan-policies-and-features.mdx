@@ -1,0 +1,255 @@
+# Build Your Loan Policies & Features Knowledge Agent with Mastra
+
+> Create a Mastra agent that ingests & searches loan policy documents (personal, mortgage, business), retrieves authoritative snippets, and answers user questions with compliant financial disclaimers — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- A **Mastra knowledge agent** named `loan-policies` that responds only when queried and always grounds answers in retrieved docs.
+- **Ingestion + retrieval tools** to add remote/local policy sources and perform semantic-ish keyword scoring across Markdown / text.
+- **REST endpoints** to ingest sources and search documents.
+- **Agent API** for chat completions (text or streamed) integrated into CometChat.
+
+***
+
+## Prerequisites
+
+- Mastra project (`npx create-mastra@latest my-mastra-app` or this folder).
+- Node.js 18+.
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- (Optional) CometChat app to wire the agent into conversations.
+
+***
+
+## Quick links
+
+- Project README: `loan-policies-and-features/README.md`
+- Swagger UI (local): http://localhost:4111/swagger-ui
+- Knowledge base root: `knowledge/loans/`
+- Agent file: `src/mastra/agents/loan-policies-agent.ts`
+- Tools: `src/mastra/tools/`
+
+***
+
+## How it works
+
+This example implements a retrieval‑augmented knowledge agent that:
+
+- Loads / stores loan policy documents under `knowledge/loans` (and additional namespaces if desired).
+- Ingests sources via the `ingestSources` tool & route (PDF, HTML, Markdown, plain text, or raw pasted content) — normalizing them to `.md` files.
+- Retrieves relevant passages using the `docsRetriever` tool (keyword & phrase scoring + filename signal). The agent ALWAYS calls this tool first.
+- Formats answers with disclaimers and includes a source list (filenames only) at the end.
+- Provides REST endpoints for ingestion and search plus auto‑generated agent endpoints.
+- Uses a LibSQL (SQLite file) memory store for conversational context.
+
+Key components:
+- Agent: `src/mastra/agents/loan-policies-agent.ts`
+- Tools: `src/mastra/tools/docs-retriever.ts`, `src/mastra/tools/ingest-sources.ts`
+- Routes: `src/mastra/server/routes.ts`, `src/mastra/server/routes/ingest.ts`, `src/mastra/server/routes/searchDocs.ts`
+- Error safety: `src/mastra/server/util/safeErrorMessage.ts`
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">Run <code>npm install</code> inside <code>loan-policies-and-features</code>.</Step>
+  <Step title="Add environment">Create <code>.env</code> with <code>OPENAI_API_KEY</code>. Optionally set <code>PORT=4111</code>.</Step>
+  <Step title="Run server">Start with <code>npm run dev</code>. Open <code>/swagger-ui</code> to view routes.</Step>
+  <Step title="Seed knowledge">Ensure initial docs exist in <code>knowledge/loans/</code> (already provided). Add more via ingestion endpoint.</Step>
+  <Step title="Test retrieval">POST to <code>/api/tools/searchDocs</code> with a query (see examples below).</Step>
+  <Step title="Chat with agent">POST a messages array to the agent generate endpoint (see Step 3 details).</Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - `package.json`, `tsconfig.json`, `.env.example`, `README.md`
+- Knowledge Base
+  - `knowledge/loans/*.md` (personal, mortgage, business policy docs)
+- Agents
+  - `src/mastra/agents/loan-policies-agent.ts`
+- Tools
+  - `src/mastra/tools/ingest-sources.ts`
+  - `src/mastra/tools/docs-retriever.ts`
+  - `src/mastra/tools/index.ts`
+- Server
+  - `src/mastra/server/routes.ts`
+  - `src/mastra/server/routes/ingest.ts`
+  - `src/mastra/server/routes/searchDocs.ts`
+  - `src/mastra/server/util/safeErrorMessage.ts`
+- Mastra bootstrap
+  - `src/mastra/index.ts`
+
+***
+
+## Step 1 - The Agent
+
+Core behavior in `loan-policies-agent.ts`:
+
+- Name: <b>loan-policies</b> → default API path pattern `/api/agents/loan-policies/*` (Mastra auto‑generated). Some versions also expose legacy `/api/agent/loan-policies/text` & `/stream` endpoints.
+- Model: OpenAI GPT‑4o via `@ai-sdk/openai`.
+- Tools: `docsRetriever` required for every answer (prompt instructs mandatory usage first).
+- Memory: LibSQL store for conversation continuity.
+- Disclaimers appended automatically via instructions.
+
+***
+
+## Step 2 - Tools
+
+### docsRetriever
+Scores Markdown / text files in the selected namespace (default `loans`) using token coverage, occurrences, earliest position, and filename boosts. Returns structured matches with excerpts.
+
+### ingestSources
+Accepts arrays of `sources` (URLs or raw text) and `files` (local paths). Normalizes content into `knowledge/<namespace>/` as slugified `.md` files. Supports:
+- Remote PDF (via `pdf-parse`)
+- Remote HTML (via Cheerio → Markdown-ish text extraction)
+- Existing local Markdown/Text
+- Raw inline text (when not URL and not path)
+
+***
+
+## Step 3 - API Endpoints
+
+Primary endpoints (see Swagger UI):
+
+- POST `/api/tools/ingestSources` — ingest remote URLs, local file paths, or raw text into knowledge namespace.
+- POST `/api/tools/searchDocs` — search knowledge documents.
+- POST `/api/agents/loan-policies/generate` — (current Mastra) generate response from agent.
+- (Legacy) POST `/api/agent/loan-policies/text` — text completion (if exposed by framework version).
+- (Legacy) POST `/api/agent/loan-policies/stream` — streaming responses (version dependent).
+- GET `/` — health check.
+
+***
+
+## Step 4 - Running & Testing
+
+<Steps>
+  <Step title="Start server">Run <code>npm run dev</code>. Confirm log shows agent registration.</Step>
+  <Step title="Search docs">POST to <code>/api/tools/searchDocs</code> with a JSON query.</Step>
+  <Step title="Ingest new source">POST to <code>/api/tools/ingestSources</code> adding PDF or Markdown URL.</Step>
+  <Step title="Chat">POST messages to <code>/api/agents/loan-policies/generate</code>.</Step>
+  <Step title="Verify sources list">Ensure agent answers end with <code>Sources:</code> filenames.</Step>
+</Steps>
+
+Example (search):
+```bash
+curl -X POST http://localhost:4111/api/tools/searchDocs \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"personal loan requirements","namespace":"loans","maxResults":5}'
+```
+
+Example (agent chat):
+```bash
+curl -X POST http://localhost:4111/api/agents/loan-policies/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages":[{"role":"user","content":"What credit score is required for a standard personal loan?"}]
+  }'
+```
+
+***
+
+## Step 5 - Ingesting Content
+
+<Steps>
+  <Step title="Remote PDF">Provide a direct PDF URL in <code>sources</code>.</Step>
+  <Step title="HTML page">Provide a page URL (will extract text, links pruned).</Step>
+  <Step title="Local file">Pass relative or absolute path via <code>files</code>.</Step>
+  <Step title="Raw snippet">Provide raw text (no URL/path pattern) inside <code>sources</code>.</Step>
+  <Step title="Namespace">Use <code>namespace</code> to segment domains (e.g., <code>mortgage</code>, <code>business-loans</code>).</Step>
+</Steps>
+
+Example ingestion:
+```bash
+curl -X POST http://localhost:4111/api/tools/ingestSources \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sources":["https://example.com/sample-loan-policy.pdf","Personal loan grace period is 15 days before late fee applies."],
+    "namespace":"loans"
+  }'
+```
+
+***
+
+## Step 6 - CometChat Integration
+
+<Steps>
+  <Step title="Open Dashboard"><a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Navigate to <b>AI Agents</b>.</Step>
+  <Step title="Add Agent">Provider=Mastra, Agent ID=<code>loan-policies</code>.</Step>
+  <Step title="Deployment URL">Public URL → <code>/api/agents/loan-policies/generate</code>.</Step>
+  <Step title="Save & Enable">Ensure status shows Enabled.</Step>
+</Steps>
+
+***
+
+## Step 7 - Customize & Extend
+
+<CardGroup>
+  <Card title="Namespaces" description="Segment policy sets (loans, mortgage, business)." />
+  <Card title="Vector Search" description="Swap keyword scoring for embeddings / ANN." />
+  <Card title="Compliance Layer" description="Add PII redaction & access control per namespace." />
+  <Card title="Versioning" description="Retain historical policy snapshots for audit." />
+</CardGroup>
+
+***
+
+## Step 8 - Validation & QA
+
+<Steps>
+  <Step title="Grounding check">Confirm every answer lists sources.</Step>
+  <Step title="No hallucination">Ask for unsupported product; agent should request clarification.</Step>
+  <Step title="Namespace isolation">Ingest unique doc under new namespace; query with & without namespace to compare.</Step>
+  <Step title="Error handling">Force a missing file path — expect sanitized error message.</Step>
+</Steps>
+
+***
+
+## Security & Production Checklist
+
+- Enforce auth (API key/JWT) on ingestion endpoints.
+- Restrict `allowInsecureTLS` usage or disable in prod.
+- Sanitize and log only minimal metadata (no sensitive applicant PII if later extended).
+- Rate limit ingestion & search endpoints.
+- Validate file size & type (already limited for large PDFs, extend as needed).
+- Add retries / backoff for remote fetch failures.
+- Introduce structured auditing (who ingested what & when).
+
+***
+
+## Troubleshooting
+
+| Problem | Cause | Resolution |
+|---------|-------|-----------|
+| No matches found | Tokens filtered out / empty namespace | Add docs or use more specific terms |
+| Ingestion skipped | File already exists slug | Rename or append timestamp before ingest |
+| 400 on ingest | Neither sources nor files provided | Provide at least one entry |
+| Empty sources list in answer | Tool not invoked (instructions altered) | Restore mandatory tool instruction |
+| Agent route 404 | Version mismatch | Check Swagger UI for actual agent endpoint pattern |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required OpenAI key
+PORT=4111            # Optional server port
+```
+
+***
+
+## Next Extensions
+
+- Add embeddings & semantic re-ranking.
+- Implement doc diffing & change alerts.
+- Add role-based access (e.g., only Compliance can ingest).
+- Provide PDF page coordinate mapping for citations.
+- Stream agent responses to client UI.
+
+***
+
+> All responses are educational; not financial advice. Loan approval depends on credit review & verification.

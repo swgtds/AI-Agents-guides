@@ -1,0 +1,284 @@
+# Build Your KYC / AML Compliance Workflow Agent with Mastra
+
+> Create a Mastra agent that orchestrates end‑to‑end KYC / AML: collects customer data, processes documents, verifies identity, screens sanctions, assesses risk, performs compliance review — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- Mastra agents for KYC / AML orchestration and risk/compliance decisions.
+- Triggered in chat only when explicitly mentioned (e.g., `@kyc-compliance`).
+- REST workflow endpoints: initiate → info → documents → identity → sanctions → risk → review → status.
+- Reusable compliance tools (document processing, identity verification, sanctions screening, risk assessment, final review).
+- CometChat integration for conversational guidance and escalation.
+
+***
+
+## Prerequisites
+
+- A Mastra project (`npx create-mastra@latest my-mastra-app`).
+- Node.js 18+ (recommended 20+).
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- (Optional) CometChat app for chat integration.
+
+***
+
+## Quick links
+
+- Project README: `kyc-compliance-agent/README.md`
+- Swagger UI (local): http://localhost:4111/docs
+- Environment variables: see README → Environment Variables
+
+***
+
+## How it works
+
+This example implements a KYC / AML Compliance Workflow that:
+
+- Orchestrates a regulated onboarding sequence via REST routes.
+- Simulates realistic compliance tooling (OCR, identity, sanctions, risk scoring, decisioning).
+- Uses tools in `src/mastra/tools/compliance-tools.ts` for all verification steps.
+- Exposes 3 chat agents:
+  - `kyc-compliance`: main workflow guide + tool invocation.
+  - `compliance-officer`: handles escalations / high risk.
+  - `risk-analyst`: deep sanctions + risk analysis.
+- Maintains in‑memory records (swap for DB in production) and returns structured JSON at each stage.
+- Sanitizes errors with `safeErrorMessage` utility before responding.
+
+Key components:
+- Agents: `src/mastra/agents/compliance-agent.ts`
+- Tools: `src/mastra/tools/compliance-tools.ts`
+- Routes: `src/mastra/server/routes/compliance.ts`
+- API Route Registration: `src/mastra/server/routes.ts`
+- Mastra bootstrap: `src/mastra/index.ts`
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies and add <code>OPENAI_API_KEY</code> to <code>.env</code>. Run <code>npm run dev</code> to start the server.
+  </Step>
+  <Step title="Define agents">
+    Confirm the three agents are registered: <b>kyc-compliance</b>, <b>compliance-officer</b>, <b>risk-analyst</b>. The primary agent should only answer when explicitly addressed (e.g., <code>@kyc-compliance</code>).
+  </Step>
+  <Step title="Register routes">
+    Ensure compliance workflow routes under <code>/api/compliance/*</code> are exported in <code>src/mastra/server/routes.ts</code>.
+  </Step>
+  <Step title="Run locally">
+    Access Swagger UI at <code>/docs</code>. Test each endpoint sequentially.
+  </Step>
+  <Step title="Walk the workflow">
+    Call: initiate → customer-info → process-document (repeat) → verify-identity → sanctions-screening → risk-assessment → compliance-review → status.
+  </Step>
+  <Step title="Connect to CometChat">
+    In CometChat Dashboard AI Agents: Provider=Mastra, Agent ID=<code>kyc-compliance</code>, Deployment URL → your public generate endpoint.
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+Core files for the KYC / AML Workflow Agent:
+
+- Runtime & config
+  - `package.json`, `tsconfig.json`, `README.md`
+- Agents
+  - `src/mastra/agents/compliance-agent.ts`
+- Tools
+  - `src/mastra/tools/compliance-tools.ts`
+  - `src/mastra/tools/index.ts`
+- Server
+  - `src/mastra/index.ts`
+  - `src/mastra/server/routes.ts`
+  - `src/mastra/server/routes/compliance.ts`
+  - `src/mastra/server/util/safeErrorMessage.ts`
+- Types
+  - `src/types/kyc-compliance.ts`
+
+***
+
+## Step 1 - Create the Agents
+
+`compliance-agent.ts` should export and register:
+
+- `kyc-compliance` (workflow orchestrator; can invoke all tools).
+- `compliance-officer` (escalations & approvals; excludes document processor).
+- `risk-analyst` (risk & sanctions focus only).
+
+Behavioral expectations:
+- Respond only when directly mentioned.
+- Provide next step prompts based on current status.
+- Avoid approving if sanctions matches unresolved or risk critical.
+
+***
+
+## Step 2 - Compliance Tools
+
+Tools in `compliance-tools.ts`:
+
+| Tool | Purpose |
+|------|---------|
+| `documentProcessor` | Extract structured data & confidence from submitted docs |
+| `identityVerifier` | Multi-factor identity checks & scoring |
+| `sanctionsScreener` | Simulated OFAC / UN / EU / PEP / Adverse Media screening |
+| `riskAssessor` | Weighted risk scoring across geographic / occupation / sanctions / identity / transaction |
+| `complianceReviewer` | Final decision (approve / pending_review / rejected) + conditions & score |
+
+Usage pattern: each handler imports the module dynamically and invokes `tool.execute({ context })`.
+
+***
+
+## Step 3 - Workflow Endpoints
+
+All routes live under `/api/compliance/*`:
+
+- POST `/api/compliance/initiate` — start KYC session
+- PUT `/api/compliance/:customerId/customer-info` — supply personal or business info
+- POST `/api/compliance/:customerId/process-document` — process each document
+- POST `/api/compliance/:customerId/verify-identity` — identity verification
+- POST `/api/compliance/:customerId/sanctions-screening` — sanctions & watchlists
+- POST `/api/compliance/:customerId/risk-assessment` — composite risk score
+- POST `/api/compliance/:customerId/compliance-review` — final decision
+- GET `/api/compliance/:customerId/status` — aggregated status & metrics
+
+***
+
+## Step 4 - Running Locally
+
+<Steps>
+  <Step title="Install">
+    Run <code>npm install</code>.
+  </Step>
+  <Step title="Environment">
+    Add <code>OPENAI_API_KEY</code>. Optionally set <code>PORT</code>.
+  </Step>
+  <Step title="Start server">
+    Run <code>npm run dev</code> → visit <code>http://localhost:4111/docs</code>.
+  </Step>
+  <Step title="Test flow">
+    Use curl or Swagger to progress through each endpoint.
+  </Step>
+  <Step title="Chat agent">
+    POST to <code>/api/agents/kyc-compliance/generate</code> with a messages array mentioning the agent.
+  </Step>
+</Steps>
+
+Example (initiate):
+```bash
+curl -X POST http://localhost:4111/api/compliance/initiate \
+  -H 'Content-Type: application/json' \
+  -d '{"customerType":"individual"}'
+```
+
+***
+
+## Step 5 - CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">
+    Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.
+  </Step>
+  <Step title="AI Agents">
+    Go to AI Agents → Add Agent.
+  </Step>
+  <Step title="Configure">
+    Provider=Mastra, Agent ID=<code>kyc-compliance</code>, Deployment URL=<code>/api/agents/kyc-compliance/generate</code> (public).
+  </Step>
+  <Step title="Add others">
+    Optionally add <code>risk-analyst</code> & <code>compliance-officer</code>.
+  </Step>
+  <Step title="Enable">
+    Save and ensure status is Enabled.
+  </Step>
+</Steps>
+
+***
+
+## Step 6 - Deployment Considerations
+
+<CardGroup>
+  <Card title="Database" href="#" description="Replace in-memory Map with persistent storage (Postgres, LibSQL, etc.)" />
+  <Card title="Security" href="#security" description="AuthN/Z, rate limits, encrypted transport, audit logs" />
+  <Card title="Scalability" href="#" description="Externalize tools, queue long-running checks, add retries" />
+</CardGroup>
+
+***
+
+## Step 7 - Risk & Decision Logic
+
+Risk Level Bands (from reviewer & assessor logic):
+
+- Low: < 30 overall risk score
+- Medium: 30–49
+- High: 50–69 (EDD + senior approval)
+- Critical: 70+ (manual escalation mandatory)
+
+Compliance decision outcomes:
+- approved
+- pending_review
+- rejected
+
+Conditions may include: EDD required, senior approval, enhanced monitoring.
+
+***
+
+## Step 8 - Sample Chat Invocation
+
+```bash
+curl -X POST http://localhost:4111/api/agents/kyc-compliance/generate \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "messages": [
+      { "role": "user", "content": "@kyc-compliance what is the next step after sanctions screening?" }
+    ]
+  }'
+```
+
+***
+
+## Security & Production Checklist
+
+- Protect endpoints with auth (JWT / API key) & scoped roles.
+- Enforce schema validation on every request (already using Zod in tools/routes).
+- Mask sensitive fields (SSN, IDs) in logs.
+- Add rate limiting & size limits for document payloads.
+- Replace random mock outputs with real provider integrations (OCR, sanctions APIs, identity networks).
+- Maintain audit trail (DB tables for events & decisions).
+
+***
+
+## Troubleshooting
+
+| Issue | Likely Cause | Fix |
+|-------|--------------|-----|
+| 404 customer not found | Wrong / expired customerId | Re-initiate, persist IDs client-side |
+| Identity verification blocked | Missing docs or personal info | Ensure docs processed & info set before call |
+| Sanctions screening high risk | Random mock high risk match | Re-run (demo) or implement manual review path |
+| Agent silent | Not mentioned explicitly | Prefix message with <code>@kyc-compliance</code> |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required
+PORT=4111            # Optional server port
+NODE_ENV=development
+```
+
+***
+
+## Next Extensions
+
+- Add Beneficial Ownership parsing & multi-entity linkage.
+- Integrate real sanctions API (OFAC, Dow Jones, ComplyAdvantage, etc.).
+- Add transaction monitoring hooks post-approval.
+- Persist full audit trail & provide downloadable compliance dossier.
+- Webhook callbacks for status changes.
+
+***
+
+> Demo uses mock randomness for illustration. Replace logic before production use.

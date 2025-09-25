@@ -1,0 +1,272 @@
+# Build Your Loan Approval Coordination Workflow Agent with Mastra
+
+> Create a Mastra agent suite that coordinates end‑to‑end loan approvals: credit assessment, document verification, risk analysis, and final approval decisions — then connect it to CometChat.
+
+***
+
+## What You’ll Build
+
+- **Coordinator agent** that routes requests to specialized loan processing agents.
+- **Specialist agents**: credit assessment, document verification, risk analysis, final approval decision.
+- **Workflow + tool** to run a unified coordination step returning routing metadata & next steps.
+- **Endpoint** to chat with the coordinator (and optionally expose specialists).
+- **CometChat integration** for guided loan processing assistance.
+
+***
+
+## Prerequisites
+
+- A Mastra project (this folder or `npx create-mastra@latest my-mastra-app`).
+- Node.js 18+ (20+ recommended).
+- OpenAI API key in `.env` as `OPENAI_API_KEY`.
+- (Optional) CometChat app for conversational deployment.
+
+***
+
+## Quick links
+
+- Project README: `managing-loan-approvals/README.md`
+- Swagger / API (local): http://localhost:4111/swagger-ui (if enabled) or test via curl.
+- Agent generate endpoint: `/api/agents/loanApprovalCoordinatorAgent/generate`
+- Environment variables: see README → Environment Variables
+
+***
+
+## How it works
+
+This example provides a routing + specialization pattern:
+
+- User submits a natural language loan processing request (e.g., “Need risk assessment for volatile commercial loan”).
+- The **LoanApprovalCoordinatorAgent** inspects keywords & intent, then delegates to one of four internal specialist agents:
+  - Credit Assessment
+  - Document Verification
+  - Risk Analysis
+  - Approval Decision
+- Each specialist produces: narrative response, structured `loanDetails`, `nextSteps`, and routing metadata.
+- A unified **tool** (`loanApprovalCoordinator`) and **workflow** (`loan-approval-coordinator-workflow`) expose this logic programmatically.
+- Coordinator responses always end with a footer pattern: `([routedTo] | action: yes/no | approval-type: [approvalType])` for machine parsing.
+
+Key components:
+- Coordinator logic: `src/mastra/agents/loan-approval-coordinator-agent.ts`
+- Specialists: `credit-assessment-agent.ts`, `document-verification-agent.ts`, `risk-analysis-agent.ts`, `approval-decision-agent.ts`
+- Tool: `src/mastra/tools/loan-approval-coordinator-tool.ts`
+- Workflow: `src/mastra/workflows/loan-approval-coordinator-workflow.ts`
+- Mastra setup: `src/mastra/index.ts` (agents + workflows registration)
+
+***
+
+## Architecture at a Glance
+
+<CardGroup>
+  <Card title="Coordinator" description="Parses intent & delegates to specialized agent" />
+  <Card title="Specialists" description="Perform domain-specific analysis (credit, docs, risk, decision)" />
+  <Card title="Tool" description="Programmatic entrypoint for orchestration" />
+  <Card title="Workflow" description="Composable step returning structured approval context" />
+</CardGroup>
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">In folder <code>managing-loan-approvals</code> run <code>npm install</code>.</Step>
+  <Step title="Env vars">Add <code>OPENAI_API_KEY</code> to <code>.env</code>.</Step>
+  <Step title="Run dev server">Start with <code>npm run dev</code> or <code>npx mastra dev</code>.</Step>
+  <Step title="Verify agent">Call generate endpoint with a credit, docs, risk, or decision request.</Step>
+  <Step title="Inspect workflow">Review <code>loan-approval-coordinator-workflow.ts</code> for step I/O schemas.</Step>
+  <Step title="Integrate CometChat">Register agent ID <code>loanApprovalCoordinatorAgent</code> in Dashboard → AI Agents.</Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & Config
+  - `package.json`, `tsconfig.json`, `README.md`
+- Mastra
+  - `src/mastra/index.ts` (register agents + workflows)
+  - `src/mastra/agents/` (specialist + coordinator agents)
+  - `src/mastra/tools/loan-approval-coordinator-tool.ts`
+  - `src/mastra/workflows/loan-approval-coordinator-workflow.ts`
+- Entry
+  - `src/index.ts` (app bootstrap if present)
+
+***
+
+## Step 1 - Coordinator Agent
+
+The coordinator:
+- Examines request text for routing keywords.
+- Delegates to the appropriate specialist agent.
+- Returns structured result + deterministic footer.
+- Defaults to credit assessment when ambiguous.
+
+Match sets (excerpt):
+- Credit: “credit score”, “creditworthiness”, “income verification”
+- Documents: “verify documents”, “bank statements”, “tax returns”
+- Risk: “risk analysis”, “market conditions”, “due diligence”
+- Decision: “final decision”, “approve loan”, “reject application”
+
+***
+
+## Step 2 - Specialized Agents
+
+Each specialist streams an LLM response, then augments with domain heuristics:
+
+- Credit Assessment: infers credit score & amount heuristics → risk level → recommendation.
+- Document Verification: flags missing/incomplete terms → raises risk & alters recommendation.
+- Risk Analysis: raises risk for volatility or instability indicators.
+- Approval Decision: interprets approval / rejection / conditional phrasing.
+
+All return shape compatible with the coordinator’s unified schema.
+
+***
+
+## Step 3 - Tool & Workflow
+
+Tool: `loanApprovalCoordinator` (id) wraps the coordination call for direct tool invocation by other agents or workflows.
+
+Workflow: `loan-approval-coordinator-workflow` defines a single step pipeline returning the same routing payload.
+
+Use when you need deterministic structured output (e.g., integrate into a broader underwriting pipeline).
+
+***
+
+## Step 4 - Run Locally
+
+<Steps>
+  <Step title="Credit assessment">Submit a request referencing credit terms.</Step>
+  <Step title="Document verification">Include phrases like “verify documents” or “tax returns”.</Step>
+  <Step title="Risk analysis">Mention “risk analysis” or “volatile market”.</Step>
+  <Step title="Approval decision">Use “final decision” or “approve loan”.</Step>
+  <Step title="Check footer">Confirm response ends with routing metadata footer.</Step>
+</Steps>
+
+Sample (credit assessment):
+```bash
+curl -X POST http://localhost:4111/api/agents/loanApprovalCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Need credit assessment for $50,000 home loan with excellent credit"}]}'
+```
+
+Sample (risk analysis):
+```bash
+curl -X POST http://localhost:4111/api/agents/loanApprovalCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Perform risk analysis on commercial loan in volatile market"}]}'
+```
+
+***
+
+## Step 5 - Response Structure
+
+Coordinator & workflow outputs:
+```
+response            -> Narrative + explanation
+routedTo            -> credit-assessment | document-verification | risk-analysis | approval-decision
+actionTaken         -> boolean (specialist completed core evaluation)
+loanDetails         -> optional structured loan assessment (id, applicant, score, etc.)
+approvalType        -> credit-evaluation | document-review | risk-assessment | final-decision
+nextSteps[]         -> ordered actionable recommendations
+Footer (text only)  -> ([routedTo] | action: yes/no | approval-type: [approvalType])
+```
+
+***
+
+## Step 6 - CometChat Integration
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="AI Agents">Add new agent.</Step>
+  <Step title="Configure">Provider=Mastra, Agent ID=<code>loanApprovalCoordinatorAgent</code>.</Step>
+  <Step title="Deployment URL">Public URL → <code>/api/agents/loanApprovalCoordinatorAgent/generate</code>.</Step>
+  <Step title="Enable">Save & ensure agent is enabled.</Step>
+</Steps>
+
+***
+
+## Step 7 - Extend
+
+<CardGroup>
+  <Card title="Additional Specialist" description="Add fraud-detection or collateral-evaluation agent." />
+  <Card title="DB Persistence" description="Store loanDetails & audit logs in Postgres." />
+  <Card title="Scoring Engine" description="Replace heuristics with quantitative risk model." />
+  <Card title="Policy Guardrails" description="Inject compliance policy prompts + rule checks." />
+</CardGroup>
+
+***
+
+## Step 8 - Risk Classification Bands
+
+- Low: strong credit signals / verified docs / stable context.
+- Medium: moderate credit / incomplete docs or ambiguous risk factors.
+- High: poor credit indicators / missing or invalid docs / volatility terms.
+
+Recommended actions map accordingly (Approve → Review → Decline / Enhanced Due Diligence).
+
+***
+
+## Testing Matrix
+
+<Steps>
+  <Step title="Credit routing">Phrase includes “credit score” or amount + “excellent credit”.</Step>
+  <Step title="Docs routing">Phrase includes “verify documents” or “bank statements”.</Step>
+  <Step title="Risk routing">Phrase includes “risk analysis” or “volatile market”.</Step>
+  <Step title="Decision routing">Phrase includes “final approval decision”.</Step>
+  <Step title="Default path">Generic “process this loan” routes to credit assessment.</Step>
+</Steps>
+
+***
+
+## Security & Production Checklist
+
+- Add auth (API key/JWT) to generate endpoint.
+- Log structured metadata only (avoid PII unless encrypted).
+- Rate limit agent invocation to prevent abuse.
+- Persist workflow + agent outputs for audit (loan decision traceability).
+- Add configurable keyword maps (externalize to DB or config file).
+- Implement explicit underwriting policy rule engine before final decision automation.
+
+***
+
+## Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Always routes to credit | Missing keywords | Add more triggers or refine request text |
+| No footer in response | Instructions modified | Restore coordinator agent instructions footer line |
+| 404 agent endpoint | Wrong agent key | Use <code>loanApprovalCoordinatorAgent</code> object key path |
+| High latency | Streaming consumed slowly | Optimize network / consider shorter model context |
+| Incorrect risk level | Heuristic too broad | Adjust keyword detection logic in specialist agent |
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required OpenAI key
+PORT=4111            # Optional server port
+```
+
+***
+
+## Sample Decision Footer
+
+Example footer appended by coordinator:
+```
+(risk-analysis | action: yes | approval-type: risk-assessment)
+```
+
+***
+
+## Next Extensions
+
+- Add collateral valuation + LTV computation agent.
+- Integrate bureau APIs for real credit data (ensure compliance!).
+- Introduce scoring weights & probability of default modeling.
+- Add webhook events for stage transitions (credit → docs → risk → decision).
+- Implement role-based approval thresholds (e.g., high risk requires senior underwriter).
+
+***
+
+> Disclaimer: This demo is illustrative only; NOT a substitute for regulated underwriting processes. Always enforce applicable financial regulations (ECOA, FCRA, TILA, RESPA, BSA/KYC).
