@@ -46,6 +46,15 @@
           "finance/loan-policies-and-features",
           "finance/managing-loan-approvals"
         ]
+      },
+      {
+        "group": "Gaming",
+        "expanded": false,
+        "pages": [
+          "gaming/ingame-tutorials-and-faq",
+          "gaming/toggle-game-settings",
+          "gaming/tournament-coordinator-agent"
+        ]
       }
     ]
   }
