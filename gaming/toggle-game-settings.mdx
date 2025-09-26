@@ -1,0 +1,258 @@
+# Build Your Game Settings Control Agent with Mastra
+
+> Create a Mastra agent that converts player intent (mute, unmute, adjust graphics quality, set FPS cap, toggle vSync, etc.) into precise frontend tool calls — then connect it to CometChat for in‑chat control.
+
+***
+
+## What You’ll Build
+- **Mastra action agent** (`gameSettingsAgent`) that never guesses values and emits a single structured tool call per clear request.
+- Two tools: sound toggling + graphics quality adjustments (resolution normalization, fps cap, vSync flag).
+- Endpoint to drive real‑time game settings changes from chat.
+- Clarifying question logic when a request is ambiguous or underspecified.
+- Optional CometChat AI Agent integration to let users type commands like “mute music” or “set ultra at 1440p 120fps”.
+
+***
+
+## Prerequisites
+
+- Node.js 18+ (project targets >=20.9.0 in package.json)
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- Mastra installed (already configured here)
+- (Optional) CometChat app for UI integration
+
+***
+
+## Quick links
+
+- **Project README**: ./README.md
+- **Agent implementation**: `src/mastra/agents/game-settings-agent.ts`
+- **Tools**: `src/mastra/tools/toggle-sound-tool.ts`, `src/mastra/tools/set-graphics-quality-tool.ts`
+- **Mastra registry**: `src/mastra/index.ts`
+- **API base (dev)**: http://localhost:4111/api (port may vary)
+
+***
+
+## How it works
+
+The Game Settings Agent:
+
+- Parses each user message for EXACT intent categories (sound vs graphics). If both appear together, it asks which to adjust first (no tool call yet).
+- Emits ONLY one tool invocation when intent is clear (no natural language around it) OR a single clarifying question when information is missing.
+- Uses two tools:
+  - `toggleSoundTool(enabled, scope)` — scope ∈ all | music | sfx.
+  - `setGraphicsQualityTool(quality, resolution?, fpsCap?, vSync?)`.
+- Normalizes resolution aliases: 1080p→1920x1080, 1440p/2k→2560x1440, 4k/UHD→3840x2160.
+- Extracts numeric FPS targets (e.g. “cap at 120”, “limit to 144fps”).
+- Maps language: “mute/turn off/disable” → enabled:false; “unmute/enable/turn on” → enabled:true.
+- Asks clarifying questions for vague inputs: “improve performance” (no preset) → asks for low/medium/high.
+
+Error safety:
+- Never invents missing values.
+- Never combines two tool calls.
+- Returns one clarifying question instead of partial guess.
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">Run <code>npm install</code>. Ensure Node version matches engines.</Step>
+  <Step title="Add API key">Create <code>.env</code> with <code>OPENAI_API_KEY</code>.</Step>
+  <Step title="Review agent instructions">Open <code>src/mastra/agents/game-settings-agent.ts</code> to understand output contract.</Step>
+  <Step title="Start dev server">Run <code>npm run dev</code>. Note the printed port (e.g. 4111).</Step>
+  <Step title="Test endpoint">POST to <code>/api/agents/gameSettingsAgent/generate</code> with sample messages (see below).</Step>
+  <Step title="Integrate frontend">Parse tool call JSON and apply changes in your game client.</Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - `package.json`, `tsconfig.json`, `README.md`
+- Agent
+  - `src/mastra/agents/game-settings-agent.ts`
+- Tools
+  - `src/mastra/tools/toggle-sound-tool.ts`
+  - `src/mastra/tools/set-graphics-quality-tool.ts`
+  - `src/mastra/tools/index.ts`
+- Mastra registry / startup
+  - `src/mastra/index.ts`
+
+***
+
+## Step 1 - Define the Agent
+
+Ensure the agent:
+- Is exported as <b>gameSettingsAgent</b> so API path is `/api/agents/gameSettingsAgent/generate`.
+- Contains strict instruction block enforcing: (A) single tool call OR (B) clarifying question.
+- Loads tools: `toggleSoundTool`, `setGraphicsQualityTool`.
+
+***
+
+## Step 2 - Register in Mastra
+
+`src/mastra/index.ts` includes:
+
+```ts
+export const mastra = new Mastra({
+  agents: { gameSettingsAgent },
+  logger: new PinoLogger({ name: 'Game Settings Mastra', level: 'info' })
+});
+```
+
+This automatically exposes the generate route under `/api/agents/gameSettingsAgent/generate` when the dev server is running.
+
+***
+
+## Step 3 - Run & Interact
+
+<Steps>
+  <Step title="Start server">Run <code>npm run dev</code>.</Step>
+  <Step title="Mute all sound">Send user message: <code>Mute all sounds</code>.</Step>
+  <Step title="Enable only music">Message: <code>Turn music back on</code>.</Step>
+  <Step title="Set graphics quality">Message: <code>Set graphics to ultra at 1440p and cap to 120fps</code>.</Step>
+  <Step title="Ambiguous request">Message: <code>Improve performance</code> (expect clarifying question).</Step>
+</Steps>
+
+Endpoint:
+- POST `/api/agents/gameSettingsAgent/generate`
+
+Request body schema (Mastra standard):
+```json
+{ "messages": [ { "role": "user", "content": "Mute all sounds" } ] }
+```
+
+***
+
+## Sample cURL Calls
+
+```bash
+# Mute all sounds
+data='{"messages":[{"role":"user","content":"Mute all sounds"}]}'
+curl -s -X POST http://localhost:4111/api/agents/gameSettingsAgent/generate \
+ -H 'Content-Type: application/json' -d "$data"
+```
+```bash
+# Turn music back on
+data='{"messages":[{"role":"user","content":"Turn music back on"}]}'
+curl -s -X POST http://localhost:4111/api/agents/gameSettingsAgent/generate \
+ -H 'Content-Type: application/json' -d "$data"
+```
+```bash
+# Set graphics with resolution + fps cap
+data='{"messages":[{"role":"user","content":"Set graphics to ultra at 1440p and cap to 120fps"}]}'
+curl -s -X POST http://localhost:4111/api/agents/gameSettingsAgent/generate \
+ -H 'Content-Type: application/json' -d "$data"
+```
+```bash
+# Ambiguous performance request (should ask a question)
+data='{"messages":[{"role":"user","content":"Improve performance"}]}'
+curl -s -X POST http://localhost:4111/api/agents/gameSettingsAgent/generate \
+ -H 'Content-Type: application/json' -d "$data"
+```
+
+Example tool response (graphics):
+```json
+{
+  "action": "SET_GRAPHICS_QUALITY",
+  "quality": "ultra",
+  "resolution": "2560x1440",
+  "fpsCap": 120,
+  "timestamp": "2025-09-26T00:00:00.000Z"
+}
+```
+
+***
+
+## Frontend Handling Pattern
+
+```js
+function applyAgentResponse(agentJson){
+  const calls = agentJson.toolCalls || [];
+  for (const c of calls) {
+    const r = c.result;
+    switch (r.action) {
+      case 'TOGGLE_SOUND':
+        applySound(r); // Your game audio layer
+        break;
+      case 'SET_GRAPHICS_QUALITY':
+        applyGraphics(r); // Your renderer / engine config
+        break;
+    }
+  }
+}
+```
+
+***
+
+## CometChat Integration (Optional)
+
+<Steps>
+  <Step title="Open Dashboard">Go to <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Add AI Agent">Provider=Mastra, Agent ID=<code>gameSettingsAgent</code>, Deployment URL=<code>https://your-host/api/agents/gameSettingsAgent/generate</code>.</Step>
+  <Step title="Enable">Save and ensure the agent is toggled on.</Step>
+  <Step title="Test in chat">Send commands like “mute music” or “ultra at 4k 60fps”.</Step>
+</Steps>
+
+***
+
+## Integrate & Ship
+
+<CardGroup>
+  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed quickly" href="/widget/ai-agents" horizontal />
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt components</Card>
+</CardGroup>
+
+> Once connected, players can adjust settings conversationally without opening menus.
+
+***
+
+## Behavior Contract Summary
+
+- Clear single domain (sound OR graphics) → emit one tool call ONLY.
+- Both domains mentioned → ask which to modify first.
+- Missing preset for performance/visuals intent → ask clarifying question.
+- Never include narratives alongside tool JSON.
+- Never fabricate resolution, fps, or vSync flags.
+
+***
+
+## Security & Production Checklist
+
+- Gate the generate route behind auth or session validation.
+- Rate limit requests to prevent rapid setting thrash.
+- Sanitize & log tool calls for analytics (e.g., most common quality changes).
+- Enforce a whitelist of resolutions/FPS caps in frontend before applying.
+- Fallback defaults on client if fields missing (defensive coding).
+
+***
+
+## Troubleshooting
+
+- No tool returned: Likely ambiguous request — inspect the clarifying question.
+- Wrong scope (sound): Verify user text explicitly said “music” or “sfx”.
+- Resolution not applied: Ensure normalization mapping exists client-side too.
+- Multiple tool intents ignored: Design intentionally forces clarification first.
+- 404 endpoint: Confirm dev server running & agent key `gameSettingsAgent` registered.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""   # Required: OpenAI API key
+PORT=4111            # Optional: server port (Mastra default if omitted)
+```
+
+***
+
+## Next Extensions
+
+- Add granular sliders (master/music/sfx volume) with new tool.
+- Introduce GPU/CPU capability detection & recommendation tool.
+- Persist last applied settings per user session (DB + retrieval).
+- Add streaming responses for progressive “optimizing…” UX.
+- Multi‑agent pattern (separate audio-agent & graphics-agent) with orchestrator.
+
+> You now have a production-ready pattern for safe, deterministic in‑game settings control via language.

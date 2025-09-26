@@ -1,0 +1,268 @@
+# Build Your Tournament Coordination Multi-Agent with Mastra
+
+> Create a Mastra-powered coordination agent that routes organizer requests to specialized tournament functions (setup, scheduling, player management, live ops, results) — then optionally connect it to CometChat for real-time esports operations.
+
+***
+
+## What You’ll Build
+
+- **Primary routing agent** that interprets organizer/player intent and classifies it.
+- **Specialized sub-agents** (setup, match scheduling, player management, live tournament ops, results tracking).
+- A **tool** + **workflow** that encapsulate tournament coordination logic.
+- REST endpoint (Express demo: `/tournament`) + Mastra agent generate endpoint.
+- Structured responses with routing target, coordination type, tournament metadata, and next steps.
+- Optional CometChat integration for chat-based tournament control.
+
+***
+
+## Prerequisites
+
+- Node.js >= 20.9.0
+- Mastra installed (already in this project)
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app (to enable in-chat coordination)
+
+***
+
+## Quick links
+
+- **Project README**: ./README.md
+- **Primary Agent Config**: `src/mastra/index.ts`
+- **Tool**: `src/mastra/tools/tournament-coordinator-tool.ts`
+- **Workflow**: `src/mastra/workflows/tournament-coordinator-workflow.ts`
+- **Sub-Agents**: `src/mastra/agents/*`
+- **Demo Express Server**: `server.js` (endpoints: `/tournament`, `/health`)
+
+***
+
+## How it works
+
+The Tournament Coordination system:
+
+- Accepts a free-form request (e.g., “Schedule Valorant quarter finals Saturday with BO3 format”).
+- Routes to one of 5 domains: setup, scheduling, player-management, live-operations, results.
+- Derives tournament metadata (game, format, max participants, bracket type, prize pool marker).
+- Returns structured JSON including: routedTo, coordinationType, actionTaken, tournamentDetails, nextSteps.
+- Uses:
+  - Tool: `tournamentCoordinator` (normalizes + invokes internal agent logic)
+  - Workflow: orchestrates a step (`coordinate-tournament-request`) for future multi-step expansions.
+- Memory: ephemeral (LibSQL in-memory for agent) + file DB for workflows.
+
+Key components:
+- Main agent registry: `src/mastra/index.ts`
+- Coordination tool: `src/mastra/tools/tournament-coordinator-tool.ts`
+- Workflow definition: `src/mastra/workflows/tournament-coordinator-workflow.ts`
+- Sub-agent logic (domain specialization): `src/mastra/agents/`
+- Demo server (quick start without full Mastra routing): `server.js`
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Install dependencies">Run <code>npm install --legacy-peer-deps</code>.</Step>
+  <Step title="Add env vars">Create <code>.env</code> (or <code>.env.development</code>) with <code>OPENAI_API_KEY</code>.</Step>
+  <Step title="Review agent & tool">Open <code>src/mastra/index.ts</code> & <code>src/mastra/tools/tournament-coordinator-tool.ts</code>.</Step>
+  <Step title="Run (Mastra)">Run <code>npm run dev</code> (Mastra dev server) for agent generate endpoint.</Step>
+  <Step title="Run (Express demo)">Alternatively run <code>node server.js</code> for simplified REST coordination endpoint.</Step>
+  <Step title="Test routing">POST coordination requests (examples below) and inspect structured JSON results.</Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & Config
+  - `package.json`, `tsconfig.json`
+- Mastra Core
+  - `src/mastra/index.ts` (agents + workflows + storage + logger)
+  - `src/mastra/workflows/tournament-coordinator-workflow.ts`
+  - `src/mastra/tools/tournament-coordinator-tool.ts`
+- Agents (Specialists)
+  - `tournament-coordinator-agent.ts` (router logic class)
+  - `tournament-setup-agent.ts`
+  - `match-scheduling-agent.ts`
+  - `player-management-agent.ts`
+  - `live-tournament-agent.ts`
+  - (Potential future: results-tracking agent file)
+- Demo Server
+  - `server.js` (Express: `/tournament`, `/health`)
+
+***
+
+## Step 1 - Primary Coordination Agent
+
+Core expectations:
+- Interprets input & determines routing domain.
+- Adds summary suffix: <code>([routedTo] | action: yes/no | coordination-type: [coordinationType])</code>.
+- Calls internal classification logic then tool returns structured payload.
+
+Check `src/mastra/index.ts` for agent initialization (name, instructions, memory).
+
+***
+
+## Step 2 - Tool & Workflow
+
+Tool: `tournamentCoordinator` — wraps coordination logic.
+
+Workflow: `tournamentCoordinatorWorkflow` — includes step `coordinate-tournament-request` with input schema:
+- request (string)
+- organizer (optional string)
+
+Output schema includes: routing + details + nextSteps.
+
+Use workflow when you need multi-stage expansions (e.g., after classification, spawn scheduling micro-flow).
+
+***
+
+## Step 3 - Run Locally
+
+Two options:
+
+<Steps>
+  <Step title="Mastra Dev Server">Run <code>npm run dev</code> → exposes agent generate route (standard Mastra path derived from registry key: <code>/api/agents/tournamentCoordinatorAgent/generate</code>).</Step>
+  <Step title="Express Demo">Run <code>node server.js</code> → endpoints: <code>POST /tournament</code>, <code>GET /health</code>.</Step>
+  <Step title="Health Check">Verify <code>curl http://localhost:3001/health</code> (Express) or list agents via Mastra base route.</Step>
+  <Step title="Send Request">POST a JSON body with <code>{"request":"Schedule semifinal Valorant matches Saturday"}</code>.</Step>
+</Steps>
+
+***
+
+## Step 4 - Sample Requests (Express Demo)
+
+```bash
+# Tournament setup
+curl -X POST http://localhost:3001/tournament \
+  -H 'Content-Type: application/json' \
+  -d '{"request":"Create a double elimination Valorant tournament with $5000 prize pool","organizer":"Esports League"}'
+```
+```bash
+# Match scheduling
+curl -X POST http://localhost:3001/tournament \
+  -H 'Content-Type: application/json' \
+  -d '{"request":"Schedule bracket matches for LoL finals best of 5","organizer":"Tournament Director"}'
+```
+```bash
+# Player management
+curl -X POST http://localhost:3001/tournament \
+  -H 'Content-Type: application/json' \
+  -d '{"request":"Handle player registrations and team formation for CS:GO qualifier","organizer":"Admin"}'
+```
+```bash
+# Live operations
+curl -X POST http://localhost:3001/tournament \
+  -H 'Content-Type: application/json' \
+  -d '{"request":"Manage live stream coordination and technical pauses","organizer":"Broadcast Team"}'
+```
+```bash
+# Results tracking
+curl -X POST http://localhost:3001/tournament \
+  -H 'Content-Type: application/json' \
+  -d '{"request":"Track results and produce final leaderboard for Dota 2 event","organizer":"Results Manager"}'
+```
+
+***
+
+## Step 5 - Using the Mastra Agent Endpoint
+
+Standard Mastra request body:
+```bash
+curl -X POST http://localhost:4111/api/agents/tournamentCoordinatorAgent/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Set up a LoL tournament double elimination 8 teams"}]}'
+```
+
+Inspect response for final line suffix and parse structured tool output (if attached via tool call metadata).
+
+***
+
+## Step 6 - Configure in CometChat (Optional)
+
+<Steps>
+  <Step title="Dashboard">Open <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Add AI Agent">Provider=Mastra, Agent ID=<code>tournamentCoordinatorAgent</code>, Deployment URL=<code>https://your-host/api/agents/tournamentCoordinatorAgent/generate</code>.</Step>
+  <Step title="Enable">Save and toggle on.</Step>
+  <Step title="Test">Ask: “Schedule Valorant quarterfinals tomorrow afternoon”.</Step>
+</Steps>
+
+***
+
+## Step 7 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">Select the newly added tournament agent.</Step>
+  <Step title="Branding">Set esports theme, badge, call-to-action prompt.</Step>
+  <Step title="Preview">Verify routing suffix shows properly.</Step>
+  <Step title="Deploy">Publish for live tournament staff use.</Step>
+</Steps>
+
+***
+
+## Step 8 - Integrate
+
+<CardGroup>
+  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed fast" href="/widget/ai-agents" horizontal />
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt chat components</Card>
+</CardGroup>
+
+> The <b>tournamentCoordinatorAgent</b> gives staff instant routing & coordination via chat.
+
+***
+
+## Response Shape (Express Demo)
+
+Example JSON fields returned:
+- response
+- routedTo (tournament-setup | match-scheduling | player-management | live-tournament | results-tracking)
+- actionTaken (boolean)
+- tournamentDetails { tournamentName, gameType, format, maxParticipants, registrationDeadline, tournamentId, prizePool }
+- coordinationType (setup | scheduling | player-management | live-operations | results)
+- nextSteps []
+
+***
+
+## Security & Production Checklist
+
+- Add auth (API key/JWT) to POST `/tournament` & agent generate route.
+- Rate limit coordination and prevent spam routing.
+- Persist tournament metadata in durable DB (replace in-memory LibSQL): multi-tenant safety.
+- Validate game / format inputs against controlled lists.
+- Sanitize organizer-supplied strings for logs.
+- Add audit trail for administrative actions (setup changes, reschedules).
+
+***
+
+## Troubleshooting
+
+- Wrong routing domain → refine keywords (e.g., include “schedule”, “results”).
+- Missing prize detection → include words: “prize”, symbol: “$”.
+- Agent route 404 → ensure <code>npm run dev</code> (Mastra) is active & key <code>tournamentCoordinatorAgent</code> registered.
+- Empty nextSteps → verify tool executed (actionTaken true).
+- Slow responses → reduce model verbosity or switch to faster model if supported.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""        # Required OpenAI key
+PORT=4111                 # Mastra dev server port (override as needed)
+```
+
+If using Express demo separately:
+```bash
+PORT=3001 node server.js
+```
+
+***
+
+## Next Extensions
+
+- Add dedicated Results Tracking Agent file with statistical breakdowns.
+- Introduce scheduling conflict resolution (time zone + availability matrix).
+- Integrate bracket generation + seeding algorithm tool.
+- Webhook triggers for match start / completion events.
+- Real-time moderation tool (report handling + penalty assignment).
+- Export final reports (PDF / dashboard).
+
+> You now have a modular, extensible tournament coordination agent ready for live esports operations & platform integration.

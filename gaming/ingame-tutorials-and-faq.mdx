@@ -1,0 +1,279 @@
+# Build Your In‑Game Tutorials & FAQ Knowledge Agent with Mastra
+
+> Create a Mastra agent that serves contextual gaming tutorials, answers player FAQs, retrieves guide snippets, and ingests new knowledge — then connect it to CometChat for real‑time in‑chat assistance.
+
+***
+
+## What You’ll Build
+
+- **Mastra knowledge agent** (`gaming-tutorial`) for contextual gameplay help.
+- Tooling to **search** existing guides and **ingest** new content (URLs / files / text).
+- REST endpoints for: chat, guide search, and content ingestion.
+- A structured `knowledge/gaming` directory with markdown guides (combat, builds, multiplayer, FAQ, strategy).
+- Optional CometChat AI Agent integration for in‑game support chat.
+
+***
+
+## Prerequisites
+
+- Node.js 18+
+- Mastra installed in the project (already in this folder)
+- OpenAI API key in `.env` as `OPENAI_API_KEY`
+- (Optional) CometChat app for UI integration
+
+***
+
+## Quick links
+
+- **Project README**: ./README.md
+- **Swagger UI (local)**: http://localhost:4111/swagger-ui (if dev server started with Mastra)
+- **Knowledge directory**: ./knowledge/gaming/
+- **Environment variables**: see README → Environment Variables
+
+***
+
+## How it works
+
+This example implements a Knowledge & FAQ Gaming Agent that:
+
+- Answers gameplay, combat, build, and multiplayer questions using retrieved guide chunks.
+- Uses tools in `src/mastra/tools/`:
+  - `game-guide-retriever.ts` → semantic / token scoring search across markdown.
+  - `ingest-game-guides.ts` → fetch & persist new sources into `knowledge/<namespace>`.
+- Exposes custom API routes:
+  - `/chat` → conversational answers grounded in retrieved guides.
+  - `/searchGuides` → direct guide/document search.
+  - `/ingest` → ingest new content (URLs or file paths).
+- Agent memory (LibSQL) maintains session context for better follow‑ups.
+- Defensive error handling via `safeErrorMessage.ts`.
+
+Key components:
+- Agent: `src/mastra/agents/gaming-tutorial-agent.ts`
+- Tools: `src/mastra/tools/game-guide-retriever.ts`, `src/mastra/tools/ingest-game-guides.ts`
+- Routes: `src/mastra/server/routes/{chat,searchGuides,ingest}.ts`
+- Server registry: `src/mastra/index.ts`, `src/mastra/server/routes.ts`
+- Knowledge Base: `knowledge/gaming/*.md`
+
+***
+
+## Setup
+
+<Steps>
+  <Step title="Prepare project">
+    Install dependencies (<code>npm install --legacy-peer-deps</code>) and add <code>OPENAI_API_KEY</code> to <code>.env</code>.
+  </Step>
+  <Step title="Review knowledge base">
+    Inspect <code>knowledge/gaming/</code> (combat tutorial, builds guide, strategy, FAQ). Add or modify markdown as needed.
+  </Step>
+  <Step title="Understand tools">
+    <code>gameGuideRetriever</code> searches markdown; <code>ingestGameGuides</code> imports remote/file sources into the namespace (default <code>gaming</code>).
+  </Step>
+  <Step title="Run locally">
+    Start dev server with <code>npm run dev</code>. Visit <code>/swagger-ui</code> or use curl to exercise endpoints.
+  </Step>
+  <Step title="Test chat route">
+    POST to <code>/chat</code> with a gameplay question; confirm response cites guide content.
+  </Step>
+  <Step title="Optional CometChat integration">
+    Register the agent ID <code>gaming-tutorial</code> in CometChat AI Agents with the public generate endpoint (see below).
+  </Step>
+</Steps>
+
+***
+
+## Project Structure
+
+- Runtime & config
+  - `package.json`, `tsconfig.json`, `README.md`
+- Agent
+  - `src/mastra/agents/gaming-tutorial-agent.ts`
+- Tools
+  - `src/mastra/tools/game-guide-retriever.ts`
+  - `src/mastra/tools/ingest-game-guides.ts`
+  - `src/mastra/tools/index.ts`
+- Server
+  - `src/mastra/index.ts`
+  - `src/mastra/server/routes.ts`
+  - `src/mastra/server/routes/{chat,searchGuides,ingest}.ts`
+  - `src/mastra/server/util/safeErrorMessage.ts`
+- Knowledge
+  - `knowledge/gaming/*.md`
+
+***
+
+## Step 1 - Create / Confirm the Agent
+
+Ensure `gaming-tutorial` agent:
+
+- Has `name: "gaming-tutorial"` for automatic Mastra agent endpoint: `/api/agents/gaming-tutorial/generate` (Mastra default) in addition to custom `/chat` route.
+- Includes tools: `gameGuideRetriever` (mandatory for grounded answers).
+- Uses memory (LibSQL) for contextual multi‑turn help.
+- Instructions enforce: always search first, cite sources, structured step guidance.
+
+***
+
+## Step 2 - Register Tools & Routes
+
+In `src/mastra/index.ts`:
+
+- Register agents: `{ 'gaming-tutorial': gamingTutorialAgent }`.
+- Register tools: `{ gameGuideRetriever, ingestGameGuides }`.
+- Enable Swagger UI via server build config.
+
+In `src/mastra/server/routes.ts` ensure exported array includes: `chat`, `searchGuides`, `ingest`.
+
+***
+
+## Step 3 - Run the Agent
+
+Expected local API bases:
+- Custom routes: `http://localhost:4111/<route>` (e.g. `/chat`)
+- Mastra agent routes: `http://localhost:4111/api/agents/gaming-tutorial/generate`
+
+<Steps>
+  <Step title="Install dependencies">Run <code>npm install --legacy-peer-deps</code>.</Step>
+  <Step title="Start server">Run <code>npm run dev</code>.</Step>
+  <Step title="Chat (custom)">POST <code>/chat</code> with <code>{ "message": "How do I parry?" }</code>.</Step>
+  <Step title="Search guides">POST <code>/searchGuides</code> with a query like <code>"combat"</code>.</Step>
+  <Step title="Agent generate (Mastra)">POST <code>/api/agents/gaming-tutorial/generate</code> with a messages array.</Step>
+</Steps>
+
+Primary endpoints:
+- POST `/chat` — chat with gaming tutorial agent (simplified wrapper)
+- POST `/searchGuides` — search knowledge base
+- POST `/ingest` — ingest new guides (URL / files)
+- POST `/api/agents/gaming-tutorial/generate` — full Mastra agent interface
+
+***
+
+## Step 4 - Ingest New Content
+
+Use `/ingest` to add docs:
+
+```bash
+curl -X POST http://localhost:4111/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"sources": ["https://example.com/new-build-guide"], "namespace": "gaming"}'
+```
+
+Add local files by path (ensure accessible to the process):
+
+```bash
+curl -X POST http://localhost:4111/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"files": ["knowledge/gaming/custom-mechanics.md"], "namespace": "gaming"}'
+```
+
+***
+
+## Step 5 - Configure in CometChat (Optional)
+
+<Steps>
+  <Step title="Open Dashboard">Visit <a href="https://app.cometchat.com/" target="_blank" rel="noreferrer">CometChat Dashboard</a>.</Step>
+  <Step title="Add AI Agent">Provider=Mastra, Agent ID=<code>gaming-tutorial</code>, Deployment URL=<code>https://your-host/api/agents/gaming-tutorial/generate</code>.</Step>
+  <Step title="Save & Enable">Toggle to Enabled.</Step>
+  <Step title="Test">Send gameplay questions in a CometChat conversation.</Step>
+</Steps>
+
+***
+
+## Step 6 - Customize in Chat Builder
+
+<Steps>
+  <Step title="Open variant">In AI Agents, open the newly added agent.</Step>
+  <Step title="Branding & UI">Adjust theme, avatar, and welcome prompt.</Step>
+  <Step title="Preview">Validate retrieval & source citation.</Step>
+  <Step title="Deploy">Publish changes for end‑users.</Step>
+</Steps>
+
+***
+
+## Step 7 - Integrate
+
+<CardGroup>
+  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed script for instant assistant" href="/widget/ai-agents" horizontal />
+  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt chat components</Card>
+</CardGroup>
+
+> The <b>gaming-tutorial</b> agent becomes immediately available once connected.
+
+***
+
+## Step 8 - Test Your Setup
+
+<Steps>
+  <Step title="Chat route works">POST <code>/chat</code> returns sourced answer.</Step>
+  <Step title="Search works">POST <code>/searchGuides</code> returns matching docs.</Step>
+  <Step title="Ingest works">POST <code>/ingest</code> writes new file(s) under namespace.</Step>
+  <Step title="Agent generate">POST <code>/api/agents/gaming-tutorial/generate</code> yields structured response.</Step>
+</Steps>
+
+```bash
+# Chat (custom route)
+curl -X POST http://localhost:4111/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Give me a step-by-step for perfect parry timing"}'
+```
+```bash
+# Search guides
+curl -X POST http://localhost:4111/searchGuides \
+  -H "Content-Type: application/json" \
+  -d '{"query": "character builds", "namespace": "gaming"}'
+```
+```bash
+# Mastra agent generate
+data='{"messages":[{"role":"user","content":"How do I optimize a tank build?"}]}'
+curl -X POST http://localhost:4111/api/agents/gaming-tutorial/generate \
+  -H "Content-Type: application/json" -d "$data"
+```
+
+***
+
+## Retrieval Behavior
+
+- Always queries `knowledge/<namespace>` (default `gaming`).
+- Token scoring + phrase extraction improves snippet relevance.
+- Stopwords filtered for better matching signal.
+- Returns: ranked results, excerpts, sources list, diagnostics.
+
+***
+
+## Security & Production Checklist
+
+- Add auth (API key/JWT) to `/ingest` and `/chat`.
+- Rate limit ingestion & chat endpoints.
+- Sanitize / validate ingestion sources (avoid arbitrary remote SSRF).
+- Monitor error logs; keep `safeErrorMessage` responses generic.
+- Store API keys server-side only; never expose OpenAI key to clients.
+- Consider vector DB or embedding store for large-scale guide sets.
+
+***
+
+## Troubleshooting
+
+- Agent not responding: confirm `OPENAI_API_KEY` and network connectivity.
+- Empty search results: broaden query or verify files exist in `knowledge/gaming/`.
+- Ingest validation error: ensure at least one of `sources` or `files` provided.
+- Slow responses: reduce `maxResults` or pre‑process large markdown into chunks.
+- 404 on `/api/agents/gaming-tutorial/generate`: ensure Mastra dev server started and agent registered.
+
+***
+
+## Environment Variables
+
+```bash .env
+OPENAI_API_KEY=""          # Required: OpenAI API key
+PORT=4111                   # Optional: dev server port (defaults if unset)
+```
+
+***
+
+## Next Extensions
+
+- Add embeddings + semantic rerank for larger corpora.
+- Multi-namespace support (e.g., `fps`, `rpg`, `moba`).
+- Streaming responses for progressive tutorial steps.
+- Admin dashboard for ingestion audit & guide lifecycle.
+- Auto-summarization of newly ingested long-form PDFs.
+
+> You now have a retrieval‑augmented gaming knowledge agent ready for expansion & live integration.
