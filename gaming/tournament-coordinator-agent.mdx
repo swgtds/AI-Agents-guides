@@ -26,12 +26,12 @@
 
 ## Quick links
 
-- **Project README**: [./README.md](./README.md)
-- **Primary Agent Config**: [`src/mastra/index.ts`](src/mastra/index.ts)
-- **Tool**: [`src/mastra/tools/tournament-coordinator-tool.ts`](src/mastra/tools/tournament-coordinator-tool.ts)
-- **Workflow**: [`src/mastra/workflows/tournament-coordinator-workflow.ts`](src/mastra/workflows/tournament-coordinator-workflow.ts)
-- **Sub-Agents**: [`src/mastra/agents/`](src/mastra/agents/)
-- **Demo Express Server**: [`server.js`](server.js) (endpoints: `/tournament`, `/health`)
+- **Project README**: [README.md](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/README.md)
+- **Primary Agent Config**: [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/index.ts)
+- **Tool**: [src/mastra/tools/tournament-coordinator-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/tools/tournament-coordinator-tool.ts)
+- **Workflow**: [src/mastra/workflows/tournament-coordinator-workflow.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/workflows/tournament-coordinator-workflow.ts)
+- **Sub-Agents**: [src/mastra/agents/](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/)
+- **Demo Express Server**: [server.js](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/server.js) (endpoints: `/tournament`, `/health`)
 
 ***
 
@@ -49,11 +49,11 @@ The Tournament Coordination system:
 - Memory: ephemeral (LibSQL in-memory for agent) + file DB for workflows.
 
 Key components:
-- Main agent registry: [`src/mastra/index.ts`](src/mastra/index.ts)
-- Coordination tool: [`src/mastra/tools/tournament-coordinator-tool.ts`](src/mastra/tools/tournament-coordinator-tool.ts)
-- Workflow definition: [`src/mastra/workflows/tournament-coordinator-workflow.ts`](src/mastra/workflows/tournament-coordinator-workflow.ts)
-- Sub-agent logic (domain specialization): [`src/mastra/agents/`](src/mastra/agents/)
-- Demo server (quick start without full Mastra routing): [`server.js`](server.js)
+- Main agent registry: [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/index.ts)
+- Coordination tool: [src/mastra/tools/tournament-coordinator-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/tools/tournament-coordinator-tool.tshttps://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/tools/tournament-coordinator-tool.ts)
+- Workflow definition: [src/mastra/workflows/tournament-coordinator-workflow.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/workflows/tournament-coordinator-workflow.ts)
+- Sub-agent logic (domain specialization): [src/mastra/agents/](https://github.com/swagata-cometchat/gaming-AI-Agent/tree/main/tournament-coordinator-agent/src/mastra/agents)
+- Demo server (quick start without full Mastra routing): [server.js](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/server.js)
 
 ***
 
@@ -85,19 +85,19 @@ Key components:
 ## Project Structure
 
 - Runtime & Config
-  - `package.json`, `tsconfig.json`
+  - [package.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/package.json), [tsconfig.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/tsconfig.json)
 - Mastra Core
-  - `src/mastra/index.ts` (agents + workflows + storage + logger)
-  - `src/mastra/workflows/tournament-coordinator-workflow.ts`
-  - `src/mastra/tools/tournament-coordinator-tool.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/index.ts) (agents + workflows + storage + logger)
+  - [src/mastra/workflows/tournament-coordinator-workflow.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/workflows/tournament-coordinator-workflow.ts)
+  - [src/mastra/tools/tournament-coordinator-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/tools/tournament-coordinator-tool.ts)
 - Agents (Specialists)
-  - `tournament-coordinator-agent.ts` (router logic class)
-  - `tournament-setup-agent.ts`
-  - `match-scheduling-agent.ts`
-  - `player-management-agent.ts`
-  - `live-tournament-agent.ts`
+  - [tournament-coordinator-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/tournament-coordinator-agent.ts) (router logic class)
+  - [tournament-setup-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/tournament-setup-agent.ts)
+  - [match-scheduling-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/match-scheduling-agent.ts)
+  - [player-management-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/player-management-agent.ts)
+  - [live-tournament-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/agents/live-tournament-agent.ts)
 - Demo Server
-  - `server.js` (Express: `/tournament`, `/health`)
+  - [server.js](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/server.js) (Express: `/tournament`, `/health`)
 
 ***
 
@@ -108,7 +108,7 @@ Core expectations:
 - Adds summary suffix: `([routedTo] | action: yes/no | coordination-type: [coordinationType])`.
 - Calls internal classification logic then tool returns structured payload.
 
-Check [`src/mastra/index.ts`](src/mastra/index.ts) for agent initialization (name, instructions, memory).
+Check [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/tournament-coordinator-agent/src/mastra/index.ts) for agent initialization (name, instructions, memory).
 
 ***
 
@@ -138,7 +138,7 @@ Two options:
   Run <code>node server.js</code> → endpoints: <code>POST /tournament</code>, <code>GET /health</code>.
   </Step>
   <Step title="Health Check">
-  Verify <code>curl http://localhost:3001/health</code> (Express) or list agents via Mastra base route.
+  Verify <code>curl http://localhost:4111/health</code> (Express) or list agents via Mastra base route.
   </Step>
   <Step title="Send Request">
   POST a JSON body like:
@@ -154,35 +154,35 @@ Two options:
 
 ```bash
 # Tournament setup
-curl -X POST http://localhost:3001/tournament \
+curl -X POST http://localhost:4111/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Create a double elimination Valorant tournament with $5000 prize pool","organizer":"Esports League"}'
 ```
 
 ```bash
 # Match scheduling
-curl -X POST http://localhost:3001/tournament \
+curl -X POST http://localhost:4111/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Schedule bracket matches for LoL finals best of 5","organizer":"Tournament Director"}'
 ```
 
 ```bash
 # Player management
-curl -X POST http://localhost:3001/tournament \
+curl -X POST http://localhost:4111/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Handle player registrations and team formation for CS:GO qualifier","organizer":"Admin"}'
 ```
 
 ```bash
 # Live operations
-curl -X POST http://localhost:3001/tournament \
+curl -X POST http://localhost:4111/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Manage live stream coordination and technical pauses","organizer":"Broadcast Team"}'
 ```
 
 ```bash
 # Results tracking
-curl -X POST http://localhost:3001/tournament \
+curl -X POST http://localhost:4111/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Track results and produce final leaderboard for Dota 2 event","organizer":"Results Manager"}'
 ```
