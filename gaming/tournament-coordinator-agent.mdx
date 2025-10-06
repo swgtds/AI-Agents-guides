@@ -26,12 +26,12 @@
 
 ## Quick links
 
-- **Project README**: ./README.md
-- **Primary Agent Config**: `src/mastra/index.ts`
-- **Tool**: `src/mastra/tools/tournament-coordinator-tool.ts`
-- **Workflow**: `src/mastra/workflows/tournament-coordinator-workflow.ts`
-- **Sub-Agents**: `src/mastra/agents/*`
-- **Demo Express Server**: `server.js` (endpoints: `/tournament`, `/health`)
+- **Project README**: [./README.md](./README.md)
+- **Primary Agent Config**: [`src/mastra/index.ts`](src/mastra/index.ts)
+- **Tool**: [`src/mastra/tools/tournament-coordinator-tool.ts`](src/mastra/tools/tournament-coordinator-tool.ts)
+- **Workflow**: [`src/mastra/workflows/tournament-coordinator-workflow.ts`](src/mastra/workflows/tournament-coordinator-workflow.ts)
+- **Sub-Agents**: [`src/mastra/agents/`](src/mastra/agents/)
+- **Demo Express Server**: [`server.js`](server.js) (endpoints: `/tournament`, `/health`)
 
 ***
 
@@ -42,30 +42,42 @@ The Tournament Coordination system:
 - Accepts a free-form request (e.g., “Schedule Valorant quarter finals Saturday with BO3 format”).
 - Routes to one of 5 domains: setup, scheduling, player-management, live-operations, results.
 - Derives tournament metadata (game, format, max participants, bracket type, prize pool marker).
-- Returns structured JSON including: routedTo, coordinationType, actionTaken, tournamentDetails, nextSteps.
+- Returns structured JSON including: `routedTo`, `coordinationType`, `actionTaken`, `tournamentDetails`, `nextSteps`.
 - Uses:
   - Tool: `tournamentCoordinator` (normalizes + invokes internal agent logic)
   - Workflow: orchestrates a step (`coordinate-tournament-request`) for future multi-step expansions.
 - Memory: ephemeral (LibSQL in-memory for agent) + file DB for workflows.
 
 Key components:
-- Main agent registry: `src/mastra/index.ts`
-- Coordination tool: `src/mastra/tools/tournament-coordinator-tool.ts`
-- Workflow definition: `src/mastra/workflows/tournament-coordinator-workflow.ts`
-- Sub-agent logic (domain specialization): `src/mastra/agents/`
-- Demo server (quick start without full Mastra routing): `server.js`
+- Main agent registry: [`src/mastra/index.ts`](src/mastra/index.ts)
+- Coordination tool: [`src/mastra/tools/tournament-coordinator-tool.ts`](src/mastra/tools/tournament-coordinator-tool.ts)
+- Workflow definition: [`src/mastra/workflows/tournament-coordinator-workflow.ts`](src/mastra/workflows/tournament-coordinator-workflow.ts)
+- Sub-agent logic (domain specialization): [`src/mastra/agents/`](src/mastra/agents/)
+- Demo server (quick start without full Mastra routing): [`server.js`](server.js)
 
 ***
 
 ## Setup
 
 <Steps>
-  <Step title="Install dependencies">Run <code>npm install --legacy-peer-deps</code>.</Step>
-  <Step title="Add env vars">Create <code>.env</code> (or <code>.env.development</code>) with <code>OPENAI_API_KEY</code>.</Step>
-  <Step title="Review agent & tool">Open <code>src/mastra/index.ts</code> & <code>src/mastra/tools/tournament-coordinator-tool.ts</code>.</Step>
-  <Step title="Run (Mastra)">Run <code>npm run dev</code> (Mastra dev server) for agent generate endpoint.</Step>
-  <Step title="Run (Express demo)">Alternatively run <code>node server.js</code> for simplified REST coordination endpoint.</Step>
-  <Step title="Test routing">POST coordination requests (examples below) and inspect structured JSON results.</Step>
+  <Step title="Install dependencies">
+  Run <code>npm install</code>.
+  </Step>
+  <Step title="Add env vars">
+  Create <code>.env</code> (or <code>.env.development</code>) with <code>OPENAI_API_KEY</code>.
+  </Step>
+  <Step title="Review agent & tool">
+  Open <code>src/mastra/index.ts</code> & <code>src/mastra/tools/tournament-coordinator-tool.ts</code>.
+  </Step>
+  <Step title="Run (Mastra)">
+  Run <code>npm run dev</code> (Mastra dev server) for agent generate endpoint.
+  </Step>
+  <Step title="Run (Express demo)">
+  Alternatively run <code>node server.js</code> for simplified REST coordination endpoint.
+  </Step>
+  <Step title="Test routing">
+  POST coordination requests (examples below) and inspect structured JSON results.
+  </Step>
 </Steps>
 
 ***
@@ -84,7 +96,6 @@ Key components:
   - `match-scheduling-agent.ts`
   - `player-management-agent.ts`
   - `live-tournament-agent.ts`
-  - (Potential future: results-tracking agent file)
 - Demo Server
   - `server.js` (Express: `/tournament`, `/health`)
 
@@ -94,10 +105,10 @@ Key components:
 
 Core expectations:
 - Interprets input & determines routing domain.
-- Adds summary suffix: <code>([routedTo] | action: yes/no | coordination-type: [coordinationType])</code>.
+- Adds summary suffix: `([routedTo] | action: yes/no | coordination-type: [coordinationType])`.
 - Calls internal classification logic then tool returns structured payload.
 
-Check `src/mastra/index.ts` for agent initialization (name, instructions, memory).
+Check [`src/mastra/index.ts`](src/mastra/index.ts) for agent initialization (name, instructions, memory).
 
 ***
 
@@ -106,10 +117,10 @@ Check `src/mastra/index.ts` for agent initialization (name, instructions, memory
 Tool: `tournamentCoordinator` — wraps coordination logic.
 
 Workflow: `tournamentCoordinatorWorkflow` — includes step `coordinate-tournament-request` with input schema:
-- request (string)
-- organizer (optional string)
+- `request` (string)
+- `organizer` (optional string)
 
-Output schema includes: routing + details + nextSteps.
+Output schema includes: routing + details + `nextSteps`.
 
 Use workflow when you need multi-stage expansions (e.g., after classification, spawn scheduling micro-flow).
 
@@ -120,10 +131,21 @@ Use workflow when you need multi-stage expansions (e.g., after classification, s
 Two options:
 
 <Steps>
-  <Step title="Mastra Dev Server">Run <code>npm run dev</code> → exposes agent generate route (standard Mastra path derived from registry key: <code>/api/agents/tournamentCoordinatorAgent/generate</code>).</Step>
-  <Step title="Express Demo">Run <code>node server.js</code> → endpoints: <code>POST /tournament</code>, <code>GET /health</code>.</Step>
-  <Step title="Health Check">Verify <code>curl http://localhost:3001/health</code> (Express) or list agents via Mastra base route.</Step>
-  <Step title="Send Request">POST a JSON body with <code>{"request":"Schedule semifinal Valorant matches Saturday"}</code>.</Step>
+  <Step title="Mastra Dev Server">
+  Run <code>npm run dev</code> → exposes agent generate route (standard Mastra path derived from registry key: <code>/api/agents/tournamentCoordinatorAgent/generate</code>).
+  </Step>
+  <Step title="Express Demo">
+  Run <code>node server.js</code> → endpoints: <code>POST /tournament</code>, <code>GET /health</code>.
+  </Step>
+  <Step title="Health Check">
+  Verify <code>curl http://localhost:3001/health</code> (Express) or list agents via Mastra base route.
+  </Step>
+  <Step title="Send Request">
+  POST a JSON body like:
+  ```json
+  { "request": "Schedule semifinal Valorant matches Saturday" }
+  ```
+  </Step>
 </Steps>
 
 ***
@@ -136,24 +158,28 @@ curl -X POST http://localhost:3001/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Create a double elimination Valorant tournament with $5000 prize pool","organizer":"Esports League"}'
 ```
+
 ```bash
 # Match scheduling
 curl -X POST http://localhost:3001/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Schedule bracket matches for LoL finals best of 5","organizer":"Tournament Director"}'
 ```
+
 ```bash
 # Player management
 curl -X POST http://localhost:3001/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Handle player registrations and team formation for CS:GO qualifier","organizer":"Admin"}'
 ```
+
 ```bash
 # Live operations
 curl -X POST http://localhost:3001/tournament \
   -H 'Content-Type: application/json' \
   -d '{"request":"Manage live stream coordination and technical pauses","organizer":"Broadcast Team"}'
 ```
+
 ```bash
 # Results tracking
 curl -X POST http://localhost:3001/tournament \
@@ -190,34 +216,31 @@ Inspect response for final line suffix and parse structured tool output (if atta
 ## Step 7 - Customize in Chat Builder
 
 <Steps>
-  <Step title="Open variant">Select the newly added tournament agent.</Step>
-  <Step title="Branding">Set esports theme, badge, call-to-action prompt.</Step>
-  <Step title="Preview">Verify routing suffix shows properly.</Step>
-  <Step title="Deploy">Publish for live tournament staff use.</Step>
+  <Step title="Open variant">
+  Select the newly added tournament agent.
+  </Step>
+  <Step title="Branding">
+  Set esports theme, badge, call-to-action prompt.
+  </Step>
+  <Step title="Preview">
+  Verify routing suffix shows properly.
+  </Step>
+  <Step title="Deploy">
+  Publish for live tournament staff use.
+  </Step>
 </Steps>
-
-***
-
-## Step 8 - Integrate
-
-<CardGroup>
-  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed fast" href="/widget/ai-agents" horizontal />
-  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt chat components</Card>
-</CardGroup>
-
-> The <b>tournamentCoordinatorAgent</b> gives staff instant routing & coordination via chat.
 
 ***
 
 ## Response Shape (Express Demo)
 
 Example JSON fields returned:
-- response
-- routedTo (tournament-setup | match-scheduling | player-management | live-tournament | results-tracking)
-- actionTaken (boolean)
-- tournamentDetails { tournamentName, gameType, format, maxParticipants, registrationDeadline, tournamentId, prizePool }
-- coordinationType (setup | scheduling | player-management | live-operations | results)
-- nextSteps []
+- `response`
+- `routedTo` (tournament-setup | match-scheduling | player-management | live-tournament | results-tracking)
+- `actionTaken` (boolean)
+- `tournamentDetails` `{ tournamentName, gameType, format, maxParticipants, registrationDeadline, tournamentId, prizePool }`
+- `coordinationType` (setup | scheduling | player-management | live-operations | results)
+- `nextSteps` []
 
 ***
 
@@ -244,14 +267,9 @@ Example JSON fields returned:
 
 ## Environment Variables
 
-```bash .env
+```env
 OPENAI_API_KEY=""        # Required OpenAI key
-PORT=4111                 # Mastra dev server port (override as needed)
-```
-
-If using Express demo separately:
-```bash
-PORT=3001 node server.js
+PORT=4111                # Mastra dev server port (override as needed)
 ```
 
 ***

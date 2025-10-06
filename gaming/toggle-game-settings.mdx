@@ -24,12 +24,11 @@
 
 ## Quick links
 
-- **Project README**: ./README.md
-- **Agent implementation**: `src/mastra/agents/game-settings-agent.ts`
-- **Tools**: `src/mastra/tools/toggle-sound-tool.ts`, `src/mastra/tools/set-graphics-quality-tool.ts`
-- **Mastra registry**: `src/mastra/index.ts`
-- **API base (dev)**: http://localhost:4111/api (port may vary)
-
+- **Project README**: [README.md](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/README.md)
+- **Agent implementation**: [src/mastra/agents/game-settings-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/agents/game-settings-agent.ts)
+- **Tools**: [src/mastra/tools/toggle-sound-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/tools/toggle-sound-tool.ts), [src/mastra/tools/set-graphics-quality-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/tools/set-graphics-quality-tool.ts)
+- **Mastra registry**: [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/index.ts)
+- **API base (dev)**: [http://localhost:4111/api](http://localhost:4111/api)
 ***
 
 ## How it works
@@ -69,15 +68,15 @@ Error safety:
 ## Project Structure
 
 - Runtime & config
-  - `package.json`, `tsconfig.json`, `README.md`
+  - [package.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/package.json), [tsconfig.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/tsconfig.json), [README.md](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/README.md)
 - Agent
-  - `src/mastra/agents/game-settings-agent.ts`
+  - [src/mastra/agents/game-settings-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/agents/game-settings-agent.ts)
 - Tools
-  - `src/mastra/tools/toggle-sound-tool.ts`
-  - `src/mastra/tools/set-graphics-quality-tool.ts`
-  - `src/mastra/tools/index.ts`
+  - [src/mastra/tools/toggle-sound-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/tools/toggle-sound-tool.ts)
+  - [src/mastra/tools/set-graphics-quality-tool.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/tools/set-graphics-quality-tool.ts)
+  - [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/tools/index.ts)
 - Mastra registry / startup
-  - `src/mastra/index.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/toggle-game-settings/src/mastra/index.ts)
 
 ***
 
@@ -200,8 +199,8 @@ function applyAgentResponse(agentJson){
 ## Integrate & Ship
 
 <CardGroup>
-  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed quickly" href="/widget/ai-agents" horizontal />
-  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt components</Card>
+  <Card title="Widget" icon="/docs/images/products/ai-agents.svg" description="Embed quickly" href="/widget/ai-agents" horizontal />
+  <Card title="React UI Kit" icon="/docs/images/icons/react.svg" description="Prebuilt components" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal />
 </CardGroup>
 
 > Once connected, players can adjust settings conversationally without opening menus.
@@ -240,7 +239,7 @@ function applyAgentResponse(agentJson){
 
 ## Environment Variables
 
-```bash .env
+```bash
 OPENAI_API_KEY=""   # Required: OpenAI API key
 PORT=4111            # Optional: server port (Mastra default if omitted)
 ```

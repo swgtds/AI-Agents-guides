@@ -25,9 +25,9 @@
 
 ## Quick links
 
-- **Project README**: ./README.md
-- **Swagger UI (local)**: http://localhost:4111/swagger-ui (if dev server started with Mastra)
-- **Knowledge directory**: ./knowledge/gaming/
+- **Project README**: [./README.md](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/README.md)
+- **Swagger UI (local)**: [http://localhost:4111/swagger-ui](http://localhost:4111/swagger-ui) (if dev server started with Mastra)
+- **Knowledge directory**: [./knowledge/gaming/](https://github.com/swagata-cometchat/gaming-AI-Agent/tree/main/ingame-tutorials-and-faq/knowledge/gaming)
 - **Environment variables**: see README → Environment Variables
 
 ***
@@ -84,20 +84,21 @@ Key components:
 ## Project Structure
 
 - Runtime & config
-  - `package.json`, `tsconfig.json`, `README.md`
+  - [package.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/package.json), [tsconfig.json](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/tsconfig.json), [README.md](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/README.md)
 - Agent
-  - `src/mastra/agents/gaming-tutorial-agent.ts`
+  - [src/mastra/agents/gaming-tutorial-agent.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/agents/gaming-tutorial-agent.ts)
 - Tools
-  - `src/mastra/tools/game-guide-retriever.ts`
-  - `src/mastra/tools/ingest-game-guides.ts`
-  - `src/mastra/tools/index.ts`
+  - [src/mastra/tools/game-guide-retriever.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/tools/game-guide-retriever.ts)
+  - [src/mastra/tools/ingest-game-guides.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/tools/ingest-game-guides.ts)
+  - [src/mastra/tools/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/tools/index.ts)
 - Server
-  - `src/mastra/index.ts`
-  - `src/mastra/server/routes.ts`
-  - `src/mastra/server/routes/{chat,searchGuides,ingest}.ts`
-  - `src/mastra/server/util/safeErrorMessage.ts`
+  - [src/mastra/index.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/index.ts)
+  - [src/mastra/server/routes.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/server/routes.ts)
+  - [src/mastra/server/routes/chat.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/server/routes/searchGuides.ts)
+  - [src/mastra/server/routes/ingest.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/server/routes/ingest.ts)
+  - [src/mastra/server/util/safeErrorMessage.ts](https://github.com/swagata-cometchat/gaming-AI-Agent/blob/main/ingame-tutorials-and-faq/src/mastra/server/util/safeErrorMessage.ts)
 - Knowledge
-  - `knowledge/gaming/*.md`
+  - [knowledge/gaming/*.md](https://github.com/swagata-cometchat/gaming-AI-Agent/tree/main/ingame-tutorials-and-faq/knowledge/gaming) 
 
 ***
 
@@ -133,7 +134,7 @@ Expected local API bases:
 <Steps>
   <Step title="Install dependencies">Run <code>npm install --legacy-peer-deps</code>.</Step>
   <Step title="Start server">Run <code>npm run dev</code>.</Step>
-  <Step title="Chat (custom)">POST <code>/chat</code> with <code>{ "message": "How do I parry?" }</code>.</Step>
+  <Step title="Chat (custom)">POST <code>/chat</code> with <code>&#123; &quot;message&quot;: &quot;How do I parry?&quot; &#125;</code>.</Step>
   <Step title="Search guides">POST <code>/searchGuides</code> with a query like <code>"combat"</code>.</Step>
   <Step title="Agent generate (Mastra)">POST <code>/api/agents/gaming-tutorial/generate</code> with a messages array.</Step>
 </Steps>
@@ -191,8 +192,8 @@ curl -X POST http://localhost:4111/ingest \
 ## Step 7 - Integrate
 
 <CardGroup>
-  <Card title="Widget" icon={<img src="/docs/images/products/ai-agents.svg" alt="Widget" />} description="Embed script for instant assistant" href="/widget/ai-agents" horizontal />
-  <Card title="React UI Kit" icon={<img src="/docs/images/icons/react.svg" alt="React" />} href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt chat components</Card>
+  <Card title="Widget" icon="/docs/images/products/ai-agents.svg" description="Embed script for instant assistant" href="/widget/ai-agents" horizontal />
+  <Card title="React UI Kit" icon="/docs/images/icons/react.svg" href="https://www.cometchat.com/docs/ui-kit/react/ai-assistant-chat" horizontal>Prebuilt chat components</Card>
 </CardGroup>
 
 > The <b>gaming-tutorial</b> agent becomes immediately available once connected.
